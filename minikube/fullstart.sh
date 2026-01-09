@@ -17,3 +17,4 @@ if (( DRIVER & DOCKER )); then
     fi
     minikube start --driver=docker --container-runtime=containerd
 fi
+minikube addons enable metrics-server
