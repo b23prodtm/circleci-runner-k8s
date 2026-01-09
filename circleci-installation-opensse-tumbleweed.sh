@@ -11,6 +11,7 @@ sudo snap install circleci
 sudo snap install docker
 sudo snap connect circleci:docker docker
 printf "%s\n" "done..."
+
 printf "%s\n" "You can invoke CLI with /snap/bin/circleci"
 printf "%s\n"  "[aliases]" \
 "  # CircleCI" \
@@ -18,4 +19,7 @@ printf "%s\n"  "[aliases]" \
 "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
 | sudo tee /etc/containers/registries.conf.d/001-shortnames.conf
 cp -Rf /etc/containers/registries.conf.d /home/$USER/.config/containers/registries.conf.d
-podman info | grep -A10 registries
+
+printf "%s\n" "Sysbox container images builder..."
+kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
+printf "%s\n" "done."
