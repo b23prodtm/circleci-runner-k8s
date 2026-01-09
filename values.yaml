@@ -27,12 +27,13 @@ serviceAccount:
 
 # Refers to the resource class you created for your runner. See:
 # https://circleci.com/docs/2.0/runner-concepts/#namespaces-and-resource-classes
-resourceClass: "b23prodtm/linux"
 # Runner API token. See:
 # https://circleci.com/docs/2.0/runner-installation-cli/#command-line-installation
-runnerToken: "a66ffd5206780668c21c0f7651790fd1e1aadf95072dfde7276a8688db742ede63bc958cc9375f81"
 
 agent:
+  resourceClasses:
+    "b23prodtm/linux":
+      token: "a66ffd5206780668c21c0f7651790fd1e1aadf95072dfde7276a8688db742ede63bc958cc9375f81"
   ssh:
     enabled: true
 
