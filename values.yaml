@@ -34,6 +34,19 @@ agent:
   resourceClasses:
     "b23prodtm/linux":
       token: "a66ffd5206780668c21c0f7651790fd1e1aadf95072dfde7276a8688db742ede63bc958cc9375f81"
+      spec:
+        containers:
+          - name: b23prodtm-runner-agent
+            volumeMounts:
+              - name: socket
+                mountPath: /var/run/docker.sock
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumes:
+          - name: socket
+            hostPath:
+              path: /run/user/1000/docker.sock
   ssh:
     enabled: true
 
