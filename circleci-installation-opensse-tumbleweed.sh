@@ -15,4 +15,7 @@ printf "%s\n" "You can invoke CLI with /snap/bin/circleci"
 printf "%s\n"  "[aliases]" \
 "  # CircleCI" \
 "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
+"  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
 | sudo tee /etc/containers/registries.conf.d/001-shortnames.conf
+cp -Rf /etc/containers/registries.conf.d /home/$USER/.config/containers/registries.conf.d
+podman info | grep -A10 registries
