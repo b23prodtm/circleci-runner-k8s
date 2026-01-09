@@ -12,3 +12,7 @@ sudo snap install docker
 sudo snap connect circleci:docker docker
 printf "%s\n" "done..."
 printf "%s\n" "You can invoke CLI with /snap/bin/circleci"
+printf "%s\n"  "[aliases]" \
+"  # CircleCI" \
+"  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
+| sudo tee /etc/containers/registries.conf.d/001-shortnames.conf
