@@ -120,14 +120,13 @@ main() {
         sudo zypper install snapd
         sudo systemctl enable --now snapd
         sudo systemctl enable --now snapd.apparmor
-        if (( DRIVER & DOCKER )); then
             sudo snap install circleci
-            sudo snap install docker
+        if (( DRIVER & DOCKER )); then
+            snap install docker
             sudo snap connect circleci:docker docker
         fi
         if (( DRIVER & PODMAN )); then
-            sudo snap install circleci
-            sudo snap install podman
+            snap install --edge --devmode podman
             sudo snap connect circleci:docker podman
         fi
         printf "%s\n" "done..."
