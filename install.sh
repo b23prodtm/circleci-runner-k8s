@@ -7,11 +7,44 @@ KUBERNETES_UPGRADE=0x100
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
+VALUES_FILE="${SCRIPT_DIR}/values.yaml"
 
 # Load translations from JSON file
 load_translations() {
     if [[ ! -f "$TRANSLATIONS_FILE" ]]; then
         echo "ERROR: Translation file not found: $TRANSLATIONS_FILE"
+        exit 1
+    fi
+}
+
+# Check if values.yaml exists
+check_values_file() {
+    if [[ ! -f "$VALUES_FILE" ]]; then
+        echo ""
+        echo "$(t 'installation.error.values_missing')"
+        echo ""
+        echo "$(t 'installation.error.values_instructions')"
+        echo ""
+        echo "  cp values.yaml.example values.yaml"
+        echo "  nano values.yaml"
+        echo ""
+        echo "$(t 'installation.error.values_template')"
+        echo ""
+        exit 1
+    fi
+    
+    # Verify the file contains a token
+    if grep -q "YOUR_CIRCLECI_TOKEN_HERE" "$VALUES_FILE"; then
+        echo ""
+        echo "$(t 'installation.error.token_placeholder')"
+        echo ""
+        exit 1
+    fi
+    
+    if ! grep -q "token:" "$VALUES_FILE"; then
+        echo ""
+        echo "$(t 'installation.error.token_missing')"
+        echo ""
         exit 1
     fi
 }
@@ -129,6 +162,7 @@ confirm_choices() {
 # Main installation script
 main() {
     load_translations
+    check_values_file
     select_language
     display_menu
     ask_gateway_method
@@ -145,7 +179,7 @@ main() {
     helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
     helm repo update
     kubectl create namespace circleci
-    helm install container-agent container-agent/container-agent -n circleci -f values.yaml
+    helm install container-agent container-agent/container-agent -n circleci -f "$VALUES_FILE"
     printf "%s\n" "$(t 'installation.steps.done')"
 
     sleep 1
@@ -185,7 +219,7 @@ main() {
 
     sleep 1
     printf "%s\n" "$(t 'installation.steps.redeploy')"
-    helm upgrade --wait --timeout=5m eg container-agent/container-agent -n envoy-gateway-system -f values.yaml
+    helm upgrade --wait --timeout=5m eg container-agent/container-agent -n envoy-gateway-system -f "$VALUES_FILE"
     kubectl wait eg --timeout=5m --all --for=condition=Programmed -n envoy-gateway-system
     printf "%s\n" "$(t 'installation.steps.done')"
     
