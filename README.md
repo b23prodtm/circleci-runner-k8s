@@ -30,9 +30,14 @@ nano values.yaml
 
 **Where to find your CircleCI token:**
 1. Go to https://app.circleci.com/settings/organization/YOUR_ORG/runners
-2. Create a new runner or copy the token from an existing runner
-3. In `values.yaml`, replace:
-   - `MY_ORG/RESOURCE_CLASS_HERE` with your resource class (e.g., `mycompany/docker-runner`)
+2. Create a new runner and go to step 7.
+3. Otherwise to copy the token from an existing runner, follow below steps.
+4. Use CLI my-org/resource-class: ```circleci runner resource-class token create <namespace>/<resource-class>```
+5. ```circleci runner token list <namespace>/<resource-class>```
+6. ```circleci runner token delete <token-id>```
+7. ```circleci runner token create  <namespace>/<resource-class> <token-name>```
+8. In `values.yaml`, replace:
+   - `MY_ORG/RESOURCE_CLASS_HERE` with your resource class (e.g., `my-org/resource-class`)
    - `YOUR_CIRCLECI_TOKEN_HERE` with your token
 
 ### 2. Check .gitignore
