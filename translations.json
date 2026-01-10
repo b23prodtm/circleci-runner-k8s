@@ -12,8 +12,8 @@
     },
     "driver": {
       "question": "Which driver would you like to use?",
-      "podman": "Podman (recommended)",
-      "docker": "Docker",
+      "podman": "Podman",
+      "docker": "Docker (recommended)",
       "prompt": "Your choice (1 or 2):",
       "podman_selected": "✓ Podman driver selected",
       "docker_selected": "✓ Docker driver selected",
@@ -39,8 +39,8 @@
       },
       "gateway": {
         "question": "Which installation method for Envoy Gateway?",
-        "helm": "Helm (recommended)",
-        "kubernetes": "Kubernetes",
+        "helm": "Helm",
+        "kubernetes": "Kubernetes (recommended)",
         "upgrade": "Upgrade existing installation",
         "prompt": "Your choice (1, 2 or 3):",
         "helm_selected": "✓ Helm installation method selected",

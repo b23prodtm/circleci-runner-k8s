@@ -97,19 +97,19 @@ display_menu() {
 ask_gateway_method() {
     while true; do
         echo "$(t 'installation.gateway.question')"
-        echo "  1) $(t 'installation.gateway.helm')"
-        echo "  2) $(t 'installation.gateway.kubernetes')"
+        echo "  1) $(t 'installation.gateway.kubernetes')"
+        echo "  2) $(t 'installation.gateway.helm')"
         echo "  3) $(t 'installation.gateway.upgrade')"
         read -p "$(t 'installation.gateway.prompt') " choix
         case $choix in
             1 )
-                GATEWAY_INSTALL=$HELM_INSTALL
-                echo "$(t 'installation.gateway.helm_selected')"
+                GATEWAY_INSTALL=$KUBERNETES_INSTALL
+                echo "$(t 'installation.gateway.kubernetes_selected')"
                 break
                 ;;
             2 )
-                GATEWAY_INSTALL=$KUBERNETES_INSTALL
-                echo "$(t 'installation.gateway.kubernetes_selected')"
+                GATEWAY_INSTALL=$HELM_INSTALL
+                echo "$(t 'installation.gateway.helm_selected')"
                 break
                 ;;
             3 )

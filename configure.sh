@@ -87,18 +87,18 @@ ask_installation() {
 ask_driver() {
     while true; do
         echo "$(t 'driver.question')"
-        echo "  1) $(t 'driver.podman')"
-        echo "  2) $(t 'driver.docker')"
+        echo "  1) $(t 'driver.docker')"
+        echo "  2) $(t 'driver.podman')"
         read -p "$(t 'driver.prompt') " choix
         case $choix in
             1 )
-                DRIVER=$PODMAN
-                echo "$(t 'driver.podman_selected')"
+                DRIVER=$DOCKER
+                echo "$(t 'driver.docker_selected')"
                 break
                 ;;
             2 )
-                DRIVER=$DOCKER
-                echo "$(t 'driver.docker_selected')"
+                DRIVER=$PODMAN
+                echo "$(t 'driver.podman_selected')"
                 break
                 ;;
             * )
@@ -203,6 +203,7 @@ main() {
     if (( DRIVER & DOCKER )); then
         if (( INSTALL & DOCKER )); then
             dockerd-rootless-setuptool.sh install -f
+	    unset DOCKER_HOST
             docker context use rootless
         fi
         minikube start --driver=docker --container-runtime=containerd -p aged --kubernetes-version="$KUBEV"
