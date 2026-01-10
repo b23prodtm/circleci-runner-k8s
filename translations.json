@@ -69,7 +69,8 @@
       },
       "main": {
         "starting": "Starting installation...",
-        "success": "✓ Installation completed successfully!"
+        "success": "✓ Installation completed successfully!",
+	"dashboard": "Go to the dashboard!"
       }
     }
   },
@@ -144,7 +145,8 @@
       },
       "main": {
         "starting": "Démarrage de l'installation...",
-        "success": "✓ Installation terminée avec succès !"
+        "success": "✓ Installation terminée avec succès !",
+	"dashboard": "Allez au tableau de bord!"
       }
     }
 

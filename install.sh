@@ -225,6 +225,8 @@ main() {
     
     echo ""
     echo "$(t 'installation.main.success')"
+    echo "$(t 'installation.main.dashboard')"
+    printf "%s\n" "minikube -p sysbox dashboard"
 }
 
 # Start the script
