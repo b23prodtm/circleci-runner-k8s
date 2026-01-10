@@ -1,17 +1,5 @@
 version: 2.1
 
-######################
-# Common Definitions #
-######################
-parameters:
-  main:
-    description: Run primary workflow that spins up minikube/k8s
-    type: boolean
-    default: true
-  runner-image:
-    type: string
-    default: 'launch-agent'
-
 ########################
 # Workflow Definitions #
 ########################
@@ -32,7 +20,6 @@ jobs:
     - image: nestybox/ubuntu-noble-systemd-docker
       entrypoint: ["dockerd"]
       command: ["--host=unix:///var/run/docker.sock"]
-    parallelism: 5
     steps:
       - run:
           name: Verify environment
