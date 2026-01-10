@@ -2,6 +2,8 @@
 
 PODMAN=0x10
 DOCKER=0x01
+# dependency required for Sysbox dockerd
+KUBECTL_CHANNEL="1.33/stable"
 
 # Fonction pour afficher le menu
 afficher_menu() {
@@ -132,6 +134,11 @@ main() {
         printf "%s\n" "done..."
 
         printf "%s\n" "You can invoke CLI with /snap/bin/circleci"
+
+	printf "%s\n" "Install $KUBECTL_CHANNEL..."
+	sudo snap install kubectl --channel="$KUBECTL_CHANNEL" --classic
+	printf "%s\n" "done."
+
         printf "%s\n"  "[[registry]]" \
         "  # DockerHub" \
         "  \"location\" = \"docker.io\"" \
