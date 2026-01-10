@@ -12,11 +12,6 @@ parameters:
     type: string
     default: 'launch-agent'
 
-executors:
-  runner:
-    machine: true
-    resource_class: circleci/k8s-test
-
 ########################
 # Workflow Definitions #
 ########################
@@ -31,7 +26,12 @@ workflows:
 ###################
 jobs:
   runner-job:
-    executor: runner
+    # The resource_class feature allows configuring CPU and RAM resources for each job. Different resource classes are available for different executors. https://circleci.com/docs/2.0/configuration-reference/#resourceclass
+    resource_class: b23prodtm/linux
+    docker:
+    - image: nestybox/ubuntu-noble-systemd-docker
+      entrypoint: ["dockerd"]
+      command: ["--host=unix:///var/run/docker.sock"]
     parallelism: 5
     steps:
       - run:
@@ -41,10 +41,13 @@ jobs:
             echo "Kubernetes Service Host: $KUBERNETES_SERVICE_HOST"
             echo "Kubernetes Service Port: $KUBERNETES_SERVICE_PORT"
             printenv
-
   deploy-in-minikube:
-    machine:
-      image: ubuntu-2004:202104-01
+    # The resource_class feature allows configuring CPU and RAM resources for each job. Different resource classes are available for different executors. https://circleci.com/docs/2.0/configuration-reference/#resourceclass
+    resource_class: b23prodtm/linux
+    docker:
+    - image: nestybox/ubuntu-noble-systemd-docker
+      entrypoint: ["dockerd"]
+      command: ["--host=unix:///var/run/docker.sock"]
     steps:
       - checkout
       - run:
