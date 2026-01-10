@@ -21,5 +21,6 @@ printf "%s\n"  "[aliases]" \
 cp -Rf /etc/containers/registries.conf.d /home/$USER/.config/containers/registries.conf.d
 
 printf "%s\n" "Sysbox container images builder..."
+kubectl label nodes minikube sysbox-install=yes
 kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
 printf "%s\n" "done."
