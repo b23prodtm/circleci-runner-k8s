@@ -210,6 +210,7 @@ main() {
     fi
     
     minikube -p sysbox addons enable metrics-server
+    minikube profile list
     
     echo ""
     echo "$(t 'main.success')"
