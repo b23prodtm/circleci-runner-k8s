@@ -32,8 +32,8 @@ serviceAccount:
 
 agent:
   resourceClasses:
-    b23prodtm/linux:
-      token: a66ffd5206780668c21c0f7651790fd1e1aadf95072dfde7276a8688db742ede63bc958cc9375f81
+    MY_ORG/RESOURCE_CLASS_HERE:
+      token: YOUR_CIRCLECI_TOKEN_HERE
       metadata:
         annotations:
           io.kubernetes.cri-o.userns-mode: "auto:size=65536"

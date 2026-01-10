@@ -1,0 +1,111 @@
+{
+  "EN": {
+    "menu": {
+      "title": "Minikube Configuration"
+    },
+    "install": {
+      "question": "Do you want to install dependencies (Circleci, Snap, etc.)?",
+      "prompt": "Answer (y/n):",
+      "enabled": "✓ Installation enabled",
+      "disabled": "✓ Installation disabled",
+      "invalid": "Please answer 'y' (yes) or 'n' (no)"
+    },
+    "driver": {
+      "question": "Which driver would you like to use?",
+      "podman": "Podman (recommended)",
+      "docker": "Docker",
+      "prompt": "Your choice (1 or 2):",
+      "podman_selected": "✓ Podman driver selected",
+      "docker_selected": "✓ Docker driver selected",
+      "invalid": "Please choose 1 or 2"
+    },
+    "confirm": {
+      "title": "Configuration Summary",
+      "installation": "Installation :",
+      "driver": "Driver       :",
+      "yes": "YES",
+      "no": "NO",
+      "question": "Confirm and start installation? (y/n):",
+      "cancelled": "Installation cancelled.",
+      "invalid": "Please answer 'y' (yes) or 'n' (no)"
+    },
+    "main": {
+      "starting": "Starting configuration...",
+      "success": "✓ Configuration completed successfully!"
+    }
+  },
+  "FR": {
+    "menu": {
+      "title": "Configuration Minikube"
+    },
+    "install": {
+      "question": "Voulez-vous installer les dépendances (Circleci, Snap, etc.) ?",
+      "prompt": "Réponse (o/n) :",
+      "enabled": "✓ Installation activée",
+      "disabled": "✓ Installation désactivée",
+      "invalid": "Veuillez répondre par 'o' (oui) ou 'n' (non)"
+    },
+    "driver": {
+      "question": "Quel driver souhaitez-vous utiliser ?",
+      "podman": "Podman (recommandé)",
+      "docker": "Docker",
+      "prompt": "Votre choix (1 ou 2) :",
+      "podman_selected": "✓ Driver Podman sélectionné",
+      "docker_selected": "✓ Driver Docker sélectionné",
+      "invalid": "Veuillez choisir 1 ou 2"
+    },
+    "confirm": {
+      "title": "Résumé de la configuration",
+      "installation": "Installation :",
+      "driver": "Driver       :",
+      "yes": "OUI",
+      "no": "NON",
+      "question": "Confirmer et lancer l'installation ? (o/n) :",
+      "cancelled": "Installation annulée.",
+      "invalid": "Veuillez répondre par 'o' (oui) ou 'n' (non)"
+    },
+    "main": {
+      "starting": "Démarrage de la configuration...",
+      "success": "✓ Configuration terminée avec succès !"
+    }
+  },
+  "installation": {
+    "menu": {
+      "title": "CircleCI & Envoy Gateway Installation"
+    },
+    "gateway": {
+      "question": "Which installation method for Envoy Gateway?",
+      "helm": "Helm (recommended)",
+      "kubernetes": "Kubernetes",
+      "upgrade": "Upgrade existing installation",
+      "prompt": "Your choice (1, 2 or 3):",
+      "helm_selected": "✓ Helm installation method selected",
+      "kubernetes_selected": "✓ Kubernetes installation method selected",
+      "upgrade_selected": "✓ Upgrade method selected",
+      "invalid": "Please choose 1, 2 or 3"
+    },
+    "confirm": {
+      "title": "Installation Summary",
+      "helm_version": "Helm Version  :",
+      "method": "Method        :",
+      "question": "Confirm and start installation? (y/n):",
+      "cancelled": "Installation cancelled.",
+      "invalid": "Please answer 'y' (yes) or 'n' (no)"
+    },
+    "steps": {
+      "container_runner": "Container runner installation...",
+      "sysbox": "Sysbox container images builder...",
+      "ssh_enable": "Enable rerun job with SSH...",
+      "envoy_version": "Envoyproxy/gateway-helm version",
+      "helm_install": "Installation with Helm...",
+      "kubernetes_install": "Installation with Kubernetes...",
+      "kubernetes_upgrade": "Upgrade with Kubernetes...",
+      "redeploy": "Redeploy Manifest for SSH gateway to be programmed...",
+      "done": "done..."
+    },
+    "main": {
+      "starting": "Starting installation...",
+      "success": "✓ Installation completed successfully!"
+    }
+  }
+}
