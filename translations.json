@@ -63,7 +63,7 @@
         "envoy_version": "Envoyproxy/gateway-helm version",
         "helm_install": "Installation with Helm...",
         "kubernetes_install": "Installation with Kubernetes...",
-        "kubernetes_upgrade": "Upgrade with Kubernetes...",
+        "helm_upgrade": "Upgrade with Helm...",
         "redeploy": "Redeploy Manifest for SSH gateway to be programmed...",
         "done": "done..."
       },
@@ -138,7 +138,7 @@
         "envoy_version": "Version d'Envoyproxy/gateway-helm",
         "helm_install": "Installation avec Helm...",
         "kubernetes_install": "Installation avec Kubernetes...",
-        "kubernetes_upgrade": "Mise à jour avec Kubernetes...",
+        "helm_upgrade": "Mise à jour avec Helm...",
         "redeploy": "Redéploiement du manifeste pour programmer la passerelle SSH...",
         "done": "terminé..."
       },

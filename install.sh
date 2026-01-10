@@ -3,7 +3,7 @@
 HELM_VERSION="v1.6.1"
 HELM_INSTALL=0x1
 KUBERNETES_INSTALL=0x10
-KUBERNETES_UPGRADE=0x100
+HELM_UPGRADE=0x100
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -113,7 +113,7 @@ ask_gateway_method() {
                 break
                 ;;
             3 )
-                GATEWAY_INSTALL=$KUBERNETES_UPGRADE
+                GATEWAY_INSTALL=$HELM_UPGRADE
                 echo "$(t 'installation.gateway.upgrade_selected')"
                 break
                 ;;
@@ -174,7 +174,7 @@ main() {
     # Container runner installation
     printf "%s\n" ""
     printf "%s\n" "$(t 'installation.steps.container_runner')"
-    kubectl uninstall container-agent -n circleci || true
+    helm uninstall container-agent -n circleci || true
     kubectl delete namespace circleci || true
     helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
     helm repo update
@@ -192,7 +192,7 @@ main() {
     printf "%s\n" ""
     printf "%s\n" "$(t 'installation.steps.ssh_enable')"
     printf "%s\n" "$(t 'installation.steps.envoy_version') $HELM_VERSION"
-    kubectl uninstall eg -n envoy-gateway-system|| true
+    helm uninstall eg -n envoy-gateway-system|| true
     kubectl delete namespace envoy-gateway-system || true
 
     if (( GATEWAY_INSTALL & HELM_INSTALL )); then
@@ -207,8 +207,8 @@ main() {
         kubectl apply --force-conflicts --server-side -f https://github.com/envoyproxy/gateway/releases/download/latest/install.yaml
     fi
     
-    if (( GATEWAY_INSTALL & KUBERNETES_UPGRADE )); then  
-        printf "%s\n" "$(t 'installation.steps.kubernetes_upgrade')"
+    if (( GATEWAY_INSTALL & HELM_UPGRADE )); then  
+        printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
         helm pull oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" --untar
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/gatewayapi-crds.yaml
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/generated
