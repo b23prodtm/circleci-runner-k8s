@@ -2,7 +2,7 @@
 
 PODMAN=0x10
 DOCKER=0x01
-KUBECTL_CHANNEL="1.33/stable"
+KUBEV="v1.33.7"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -183,10 +183,6 @@ main() {
 
         printf "%s\n" "You can invoke CLI with /snap/bin/circleci"
 
-        printf "%s\n" "Install $KUBECTL_CHANNEL..."
-        sudo snap install kubectl --channel="$KUBECTL_CHANNEL" --classic
-        printf "%s\n" "done."
-
         printf "%s\n"  "[[registry]]" \
         "  # DockerHub" \
         "  \"location\" = \"docker.io\"" \
@@ -201,7 +197,7 @@ main() {
     fi
     
     if (( DRIVER & PODMAN )); then
-        minikube start --driver=podman --container-runtime=cri-o
+        minikube start --driver=podman --container-runtime=cri-o -p aged --kubernetes-version="$KUBEV"
     fi
     
     if (( DRIVER & DOCKER )); then
@@ -209,7 +205,7 @@ main() {
             dockerd-rootless-setuptool.sh install -f
             docker context use rootless
         fi
-        minikube start --driver=docker --container-runtime=containerd
+        minikube start --driver=docker --container-runtime=containerd -p aged --kubernetes-version="$KUBEV"
     fi
     
     minikube addons enable metrics-server
