@@ -8,7 +8,13 @@ kubectl create namespace circleci
 helm install container-agent container-agent/container-agent -n circleci -f values.yaml
 printf "%s\n" "done..."
 
-sleep 2
+sleep 1
+printf "%s\n" "Sysbox container images builder..."
+kubectl label nodes minikube sysbox-install=yes
+kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
+printf "%s\n" "done."
+
+sleep 1
 HELM_VERSION="v1.6.1"
 HELM_INSTALL=0x1
 KUBERNETES_INSTALL=0x10
