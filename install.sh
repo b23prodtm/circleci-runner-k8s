@@ -184,7 +184,7 @@ main() {
 
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"
-    kubectl label nodes minikube sysbox-install=yes
+    kubectl label nodes sysbox sysbox-install=yes
     kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
     printf "%s\n" "$(t 'installation.steps.done')"
 

@@ -158,8 +158,8 @@ main() {
     echo ""
     
     # === ORIGINAL SCRIPT ===
-    minikube stop || true
-    minikube delete || true
+    minikube -p sysbox stop || true
+    minikube -p sysbox delete || true
 
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
@@ -197,7 +197,7 @@ main() {
     fi
     
     if (( DRIVER & PODMAN )); then
-        minikube start --driver=podman --container-runtime=cri-o -p aged --kubernetes-version="$KUBEV"
+        minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
     fi
     
     if (( DRIVER & DOCKER )); then
@@ -206,10 +206,10 @@ main() {
 	    unset DOCKER_HOST
             docker context use rootless
         fi
-        minikube start --driver=docker --container-runtime=containerd -p aged --kubernetes-version="$KUBEV"
+        minikube start --driver=docker --container-runtime=containerd -p sysbox --kubernetes-version="$KUBEV"
     fi
     
-    minikube addons enable metrics-server
+    minikube -p sysbox addons enable metrics-server
     
     echo ""
     echo "$(t 'main.success')"
