@@ -142,13 +142,14 @@ main() {
         printf "%s\n"  "[[registry]]" \
         "  # DockerHub" \
         "  \"location\" = \"docker.io\"" \
-        | sudo tee /etc/containers/registries.conf.d/001-registries.conf
-        printf "%s\n" \
+        | sudo tee /etc/containers/registries.conf.d/k8s-registries.conf
+        printf "%s\n"  "[aliases]" \
         "  # CircleCI" \
         "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
         "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
-        | sudo tee /etc/containers/registries.conf.d/001-shortnames.conf
-        cp -Rf /etc/containers/registries.conf.d /home/$USER/.config/containers/registries.conf.d
+        | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
+	printf "%s\n" "Copied to the user containers path..."
+        cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
     fi
     
     if (( DRIVER & PODMAN )); then
