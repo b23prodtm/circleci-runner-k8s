@@ -171,17 +171,6 @@ main() {
     echo "$(t 'installation.main.starting')"
     echo ""
     
-    # Container runner installation
-    printf "%s\n" ""
-    printf "%s\n" "$(t 'installation.steps.container_runner')"
-    helm uninstall container-agent -n circleci || true
-    kubectl delete namespace circleci || true
-    helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
-    helm repo update
-    kubectl create namespace circleci
-    helm install container-agent container-agent/container-agent -n circleci -f "$VALUES_FILE"
-    printf "%s\n" "$(t 'installation.steps.done')"
-
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"
     kubectl label nodes sysbox sysbox-install=yes
@@ -223,6 +212,17 @@ main() {
     kubectl wait eg --timeout=5m --all --for=condition=Programmed -n envoy-gateway-system
     printf "%s\n" "$(t 'installation.steps.done')"
     
+    # Container runner installation
+    printf "%s\n" ""
+    printf "%s\n" "$(t 'installation.steps.container_runner')"
+    helm uninstall container-agent -n circleci || true
+    kubectl delete namespace circleci || true
+    helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
+    helm repo update
+    kubectl create namespace circleci
+    helm install container-agent container-agent/container-agent -n circleci -f "$VALUES_FILE"
+    printf "%s\n" "$(t 'installation.steps.done')"
+
     echo ""
     echo "$(t 'installation.main.success')"
     echo "$(t 'installation.main.dashboard')"
