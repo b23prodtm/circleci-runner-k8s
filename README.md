@@ -30,7 +30,7 @@ nano values.yaml
 
 **Where to find your CircleCI token:**
 1. Go to https://app.circleci.com/settings/organization/YOUR_ORG/runners
-2. Create a new runner and go to step 7.
+2. Create a new runner and go to last step.
 3. Otherwise to copy the token from an existing runner, follow below steps.
 4. Use CLI my-org/resource-class: ```circleci runner resource-class token create <namespace>/<resource-class>```
 5. ```circleci runner token list <namespace>/<resource-class>```
