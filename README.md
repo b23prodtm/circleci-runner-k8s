@@ -1,125 +1,125 @@
 # Minikube & CircleCI Setup Scripts
 
-Scripts d'installation et de configuration pour Minikube avec CircleCI Container Agent et Envoy Gateway.
+Installation and configuration scripts for Minikube with CircleCI Container Agent and Envoy Gateway.
 
-## 📋 Prérequis
+## 📋 Prerequisites
 
-- `jq` - Pour le parsing JSON des traductions
-- `kubectl` - Pour la gestion Kubernetes
-- `helm` - Pour les installations Helm
-- `minikube` - Pour le cluster Kubernetes local
+- `jq` - For JSON translation parsing
+- `kubectl` - For Kubernetes management
+- `helm` - For Helm installations
+- `minikube` - For local Kubernetes cluster
 
 ```bash
-# Installation sur openSUSE
+# Installation on openSUSE
 sudo zypper install jq kubectl helm minikube
 ```
 
 ## 🔧 Configuration
 
-### 1. Créer le fichier de secrets
+### 1. Create the secrets file
 
-Le fichier `values.yaml` contient votre token CircleCI et **ne doit jamais être commité**.
+The `values.yaml` file contains your CircleCI token and **must never be committed**.
 
 ```bash
-# Copier le fichier exemple
+# Copy the example file
 cp values.yaml.example values.yaml
 
-# Éditer avec votre token
+# Edit with your token
 nano values.yaml
 ```
 
-**Où trouver votre token CircleCI :**
-1. Allez sur https://app.circleci.com/settings/organization/YOUR_ORG/runners
-2. Créez un nouveau runner ou copiez le token d'un runner existant
-3. Dans `values.yaml`, remplacez :
-   - `MY_ORG/RESOURCE_CLASS_HERE` avec votre resource class (ex: `mycompany/docker-runner`)
-   - `YOUR_CIRCLECI_TOKEN_HERE` avec votre token
+**Where to find your CircleCI token:**
+1. Go to https://app.circleci.com/settings/organization/YOUR_ORG/runners
+2. Create a new runner or copy the token from an existing runner
+3. In `values.yaml`, replace:
+   - `MY_ORG/RESOURCE_CLASS_HERE` with your resource class (e.g., `mycompany/docker-runner`)
+   - `YOUR_CIRCLECI_TOKEN_HERE` with your token
 
-### 2. Vérifier le .gitignore
+### 2. Check .gitignore
 
-Le fichier `.gitignore` est déjà configuré pour ignorer `values.yaml`. **Vérifiez toujours** avant de commiter :
+The `.gitignore` file is already configured to ignore `values.yaml`. **Always verify** before committing:
 
 ```bash
 git status
-# values.yaml ne doit PAS apparaître
+# values.yaml should NOT appear
 ```
 
-## 🚀 Utilisation
+## 🚀 Usage
 
-### Script 1 : Configuration Minikube
+### Script 1: Minikube Configuration
 
-Configure et démarre Minikube avec Podman ou Docker.
+Configures and starts Minikube with Podman or Docker.
 
 ```bash
 chmod +x configure.sh
 ./configure.sh
 ```
 
-**Options interactives :**
-- Langue : English ou Français
-- Installation des dépendances : Oui/Non
-- Driver : Podman (recommandé) ou Docker
+**Interactive options:**
+- Language: English or Français
+- Install dependencies: Yes/No
+- Driver: Podman (recommended) or Docker
 
-### Script 2 : Installation CircleCI
+### Script 2: CircleCI Installation
 
-Installe CircleCI Container Agent et Envoy Gateway.
+Installs CircleCI Container Agent and Envoy Gateway.
 
 ```bash
 chmod +x install.sh
 ./install.sh
 ```
 
-**Options interactives :**
-- Langue : English ou Français
-- Méthode d'installation Envoy Gateway :
-  - Helm (recommandé)
+**Interactive options:**
+- Language: English or Français
+- Envoy Gateway installation method:
+  - Helm (recommended)
   - Kubernetes
-  - Upgrade (mise à jour)
+  - Upgrade (update existing)
 
-## 📁 Structure du projet
+## 📁 Project Structure
 
 ```
 .
-├── configure.sh                  # Script de configuration Minikube
-├── install.sh                    # Script d'installation CircleCI
-├── translations.json             # Traductions EN/FR
-├── values.yaml                   # ⚠️ SECRET - Token CircleCI (ignoré par git)
-├── values.yaml.example           # Template de configuration
-├── .gitignore                    # Ignore les secrets
-└── README.md                     # Ce fichier
+├── configure.sh                  # Minikube configuration script
+├── install.sh                    # CircleCI installation script
+├── translations.json             # EN/FR translations
+├── values.yaml                   # ⚠️ SECRET - CircleCI token (ignored by git)
+├── values.yaml.example           # Configuration template
+├── .gitignore                    # Ignore secrets
+└── README.md                     # This file
 ```
 
-## ⚠️ Sécurité
+## ⚠️ Security
 
-### Fichiers sensibles
+### Sensitive files
 
-- `values.yaml` - **JAMAIS commiter ce fichier**
-- Contient votre token CircleCI et votre resource class
-- Est automatiquement ignoré par git
+- `values.yaml` - **NEVER commit this file**
+- Contains your CircleCI token and resource class
+- Automatically ignored by git
 
-### Vérifications de sécurité
+### Security checks
 
 ```bash
-# Vérifier que values.yaml est bien ignoré
+# Verify that values.yaml is properly ignored
 git check-ignore values.yaml
-# Doit retourner: values.yaml
+# Should return: values.yaml
 
-# Lister les fichiers qui seront committés
+# List files that will be committed
 git status
-# values.yaml ne doit PAS apparaître
+# values.yaml should NOT appear
 
-# Scanner l'historique pour des secrets (optionnel)
+# Scan history for secrets (optional)
 git log --all --full-history -- values.yaml
-# Ne doit rien retourner
+# Should return nothing
 ```
 
-## 🌍 Ajouter une langue
+## 🌍 Adding a Language
 
-Pour ajouter une nouvelle langue (ex: Espagnol) :
+To add a new language (e.g., Spanish):
 
-1. Éditer `translations.json`
-2. Ajouter une section `ES` avec toutes les traductions
-3. Modifier les scripts pour supporter la nouvelle langue
+1. Edit `translations.json`
+2. Add an `ES` section with all translations
+3. Modify scripts to support the new language
 
 ```json
 {
@@ -134,45 +134,45 @@ Pour ajouter une nouvelle langue (ex: Espagnol) :
 }
 ```
 
-## 🐛 Dépannage
+## 🐛 Troubleshooting
 
-### Erreur : "Translation file not found"
+### Error: "Translation file not found"
 ```bash
-# Vérifier que translations.json existe
+# Verify that translations.json exists
 ls -la translations.json
 ```
 
-### Erreur : "Configuration file not found"
+### Error: "Configuration file not found"
 ```bash
-# Créer le fichier de configuration
+# Create the configuration file
 cp values.yaml.example values.yaml
-# Éditer avec votre token
+# Edit with your token
 nano values.yaml
 ```
 
-### Erreur : "Please replace YOUR_CIRCLECI_TOKEN_HERE"
+### Error: "Please replace YOUR_CIRCLECI_TOKEN_HERE"
 ```bash
-# Vous devez remplacer le placeholder dans values.yaml
+# You must replace the placeholder in values.yaml
 nano values.yaml
-# Chercher YOUR_CIRCLECI_TOKEN_HERE et remplacer par votre vrai token
+# Search for YOUR_CIRCLECI_TOKEN_HERE and replace with your actual token
 ```
 
-### Erreur : "No token found"
+### Error: "No token found"
 ```bash
-# Vérifier le contenu du fichier
+# Check the file content
 grep "token:" values.yaml
-# Doit contenir: token: <votre_token_reel>
+# Should contain: token: <your_actual_token>
 ```
 
-## 📝 Licence
+## 📝 License
 
-Ce projet est sous licence MIT.
+This project is licensed under the MIT License.
 
-## 🤝 Contribution
+## 🤝 Contributing
 
-1. Fork le projet
-2. Créez votre branche (`git checkout -b feature/AmazingFeature`)
-3. **ATTENTION** : Ne commitez jamais `values.yaml`
-4. Commitez vos changements (`git commit -m 'Add some AmazingFeature'`)
-5. Push vers la branche (`git push origin feature/AmazingFeature`)
-6. Ouvrez une Pull Request
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. **WARNING**: Never commit `values.yaml`
+4. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+5. Push to the branch (`git push origin feature/AmazingFeature`)
+6. Open a Pull Request
