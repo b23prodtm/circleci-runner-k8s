@@ -32,6 +32,45 @@
     "main": {
       "starting": "Starting configuration...",
       "success": "✓ Configuration completed successfully!"
+    },
+     "installation": {
+      "menu": {
+        "title": "CircleCI & Envoy Gateway Installation"
+      },
+      "gateway": {
+        "question": "Which installation method for Envoy Gateway?",
+        "helm": "Helm (recommended)",
+        "kubernetes": "Kubernetes",
+        "upgrade": "Upgrade existing installation",
+        "prompt": "Your choice (1, 2 or 3):",
+        "helm_selected": "✓ Helm installation method selected",
+        "kubernetes_selected": "✓ Kubernetes installation method selected",
+        "upgrade_selected": "✓ Upgrade method selected",
+        "invalid": "Please choose 1, 2 or 3"
+      },
+      "confirm": {
+        "title": "Installation Summary",
+        "helm_version": "Helm Version  :",
+        "method": "Method        :",
+        "question": "Confirm and start installation? (y/n):",
+        "cancelled": "Installation cancelled.",
+        "invalid": "Please answer 'y' (yes) or 'n' (no)"
+      },
+      "steps": {
+        "container_runner": "Container runner installation...",
+        "sysbox": "Sysbox container images builder...",
+        "ssh_enable": "Enable rerun job with SSH...",
+        "envoy_version": "Envoyproxy/gateway-helm version",
+        "helm_install": "Installation with Helm...",
+        "kubernetes_install": "Installation with Kubernetes...",
+        "kubernetes_upgrade": "Upgrade with Kubernetes...",
+        "redeploy": "Redeploy Manifest for SSH gateway to be programmed...",
+        "done": "done..."
+      },
+      "main": {
+        "starting": "Starting installation...",
+        "success": "✓ Installation completed successfully!"
+      }
     }
   },
   "FR": {
@@ -68,44 +107,46 @@
       "starting": "Démarrage de la configuration...",
       "success": "✓ Configuration terminée avec succès !"
     }
-  },
-  "installation": {
-    "menu": {
-      "title": "CircleCI & Envoy Gateway Installation"
-    },
-    "gateway": {
-      "question": "Which installation method for Envoy Gateway?",
-      "helm": "Helm (recommended)",
-      "kubernetes": "Kubernetes",
-      "upgrade": "Upgrade existing installation",
-      "prompt": "Your choice (1, 2 or 3):",
-      "helm_selected": "✓ Helm installation method selected",
-      "kubernetes_selected": "✓ Kubernetes installation method selected",
-      "upgrade_selected": "✓ Upgrade method selected",
-      "invalid": "Please choose 1, 2 or 3"
-    },
-    "confirm": {
-      "title": "Installation Summary",
-      "helm_version": "Helm Version  :",
-      "method": "Method        :",
-      "question": "Confirm and start installation? (y/n):",
-      "cancelled": "Installation cancelled.",
-      "invalid": "Please answer 'y' (yes) or 'n' (no)"
-    },
-    "steps": {
-      "container_runner": "Container runner installation...",
-      "sysbox": "Sysbox container images builder...",
-      "ssh_enable": "Enable rerun job with SSH...",
-      "envoy_version": "Envoyproxy/gateway-helm version",
-      "helm_install": "Installation with Helm...",
-      "kubernetes_install": "Installation with Kubernetes...",
-      "kubernetes_upgrade": "Upgrade with Kubernetes...",
-      "redeploy": "Redeploy Manifest for SSH gateway to be programmed...",
-      "done": "done..."
-    },
-    "main": {
-      "starting": "Starting installation...",
-      "success": "✓ Installation completed successfully!"
+    ,
+    "installation": {
+      "menu": {
+        "title": "Installation de CircleCI et Envoy Gateway"
+      },
+      "gateway": {
+        "question": "Quelle méthode d'installation pour Envoy Gateway ?",
+        "helm": "Helm (recommandé)",
+        "kubernetes": "Kubernetes",
+        "upgrade": "Mettre à jour une installation existante",
+        "prompt": "Votre choix (1, 2 ou 3) :",
+        "helm_selected": "✓ Méthode d'installation Helm sélectionnée",
+        "kubernetes_selected": "✓ Méthode d'installation Kubernetes sélectionnée",
+        "upgrade_selected": "✓ Méthode de mise à jour sélectionnée",
+        "invalid": "Veuillez choisir 1, 2 ou 3"
+      },
+      "confirm": {
+        "title": "Résumé de l'installation",
+        "helm_version": "Version Helm  :",
+        "method": "Méthode        :",
+        "question": "Confirmer et lancer l'installation ? (o/n) :",
+        "cancelled": "Installation annulée.",
+        "invalid": "Veuillez répondre par 'o' (oui) ou 'n' (non)"
+      },
+      "steps": {
+        "container_runner": "Installation du container runner...",
+        "sysbox": "Construction des images de conteneurs Sysbox...",
+        "ssh_enable": "Activation du relancement des jobs via SSH...",
+        "envoy_version": "Version d'Envoyproxy/gateway-helm",
+        "helm_install": "Installation avec Helm...",
+        "kubernetes_install": "Installation avec Kubernetes...",
+        "kubernetes_upgrade": "Mise à jour avec Kubernetes...",
+        "redeploy": "Redéploiement du manifeste pour programmer la passerelle SSH...",
+        "done": "terminé..."
+      },
+      "main": {
+        "starting": "Démarrage de l'installation...",
+        "success": "✓ Installation terminée avec succès !"
+      }
     }
+
   }
 }
