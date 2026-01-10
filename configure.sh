@@ -2,7 +2,7 @@
 
 PODMAN=0x10
 DOCKER=0x01
-KUBEV="v1.33.7"
+KUBEV="v1.32.11"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
