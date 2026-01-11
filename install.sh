@@ -3,7 +3,7 @@
 HELM_VERSION="v1.6.1"
 HELM_INSTALL=0x1
 KUBERNETES_INSTALL=0x10
-KUBERNETES_UPGRADE=0x100
+HELM_UPGRADE=0x100
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -97,23 +97,23 @@ display_menu() {
 ask_gateway_method() {
     while true; do
         echo "$(t 'installation.gateway.question')"
-        echo "  1) $(t 'installation.gateway.helm')"
-        echo "  2) $(t 'installation.gateway.kubernetes')"
+        echo "  1) $(t 'installation.gateway.kubernetes')"
+        echo "  2) $(t 'installation.gateway.helm')"
         echo "  3) $(t 'installation.gateway.upgrade')"
         read -p "$(t 'installation.gateway.prompt') " choix
         case $choix in
             1 )
-                GATEWAY_INSTALL=$HELM_INSTALL
-                echo "$(t 'installation.gateway.helm_selected')"
-                break
-                ;;
-            2 )
                 GATEWAY_INSTALL=$KUBERNETES_INSTALL
                 echo "$(t 'installation.gateway.kubernetes_selected')"
                 break
                 ;;
+            2 )
+                GATEWAY_INSTALL=$HELM_INSTALL
+                echo "$(t 'installation.gateway.helm_selected')"
+                break
+                ;;
             3 )
-                GATEWAY_INSTALL=$KUBERNETES_UPGRADE
+                GATEWAY_INSTALL=$HELM_UPGRADE
                 echo "$(t 'installation.gateway.upgrade_selected')"
                 break
                 ;;
@@ -170,21 +170,14 @@ main() {
     
     echo "$(t 'installation.main.starting')"
     echo ""
-    
-    # Container runner installation
-    printf "%s\n" ""
-    printf "%s\n" "$(t 'installation.steps.container_runner')"
-    kubectl uninstall container-agent -n circleci || true
-    kubectl delete namespace circleci || true
-    helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
-    helm repo update
-    kubectl create namespace circleci
-    helm install container-agent container-agent/container-agent -n circleci -f "$VALUES_FILE"
-    printf "%s\n" "$(t 'installation.steps.done')"
+
+    if ! command -v kubectl &> /dev/null; then
+        sudo snap install kubectl --classic
+    fi
 
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"
-    kubectl label nodes minikube sysbox-install=yes
+    kubectl label nodes sysbox sysbox-install=yes
     kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
     printf "%s\n" "$(t 'installation.steps.done')"
 
@@ -192,7 +185,7 @@ main() {
     printf "%s\n" ""
     printf "%s\n" "$(t 'installation.steps.ssh_enable')"
     printf "%s\n" "$(t 'installation.steps.envoy_version') $HELM_VERSION"
-    kubectl uninstall eg -n envoy-gateway-system|| true
+    helm uninstall eg -n envoy-gateway-system|| true
     kubectl delete namespace envoy-gateway-system || true
 
     if (( GATEWAY_INSTALL & HELM_INSTALL )); then
@@ -207,13 +200,15 @@ main() {
         kubectl apply --force-conflicts --server-side -f https://github.com/envoyproxy/gateway/releases/download/latest/install.yaml
     fi
     
-    if (( GATEWAY_INSTALL & KUBERNETES_UPGRADE )); then  
-        printf "%s\n" "$(t 'installation.steps.kubernetes_upgrade')"
+    if (( GATEWAY_INSTALL & HELM_UPGRADE )); then  
+        printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
+        dir="$(pwd)"; cd  "/home/$USER"
         helm pull oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" --untar
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/gatewayapi-crds.yaml
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/generated
         helm upgrade eg oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" -n envoy-gateway-system
         rm -Rfv ./gateway-helm
+	cd "$dir"
     fi
     printf "%s\n" "$(t 'installation.steps.done')"
 
@@ -223,8 +218,21 @@ main() {
     kubectl wait eg --timeout=5m --all --for=condition=Programmed -n envoy-gateway-system
     printf "%s\n" "$(t 'installation.steps.done')"
     
+    # Container runner installation
+    printf "%s\n" ""
+    printf "%s\n" "$(t 'installation.steps.container_runner')"
+    helm uninstall container-agent -n circleci || true
+    kubectl delete namespace circleci || true
+    helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
+    helm repo update
+    kubectl create namespace circleci
+    helm install container-agent container-agent/container-agent -n circleci -f "$VALUES_FILE"
+    printf "%s\n" "$(t 'installation.steps.done')"
+
     echo ""
     echo "$(t 'installation.main.success')"
+    echo "$(t 'installation.main.dashboard')"
+    printf "%s\n" "minikube -p sysbox dashboard"
 }
 
 # Start the script

@@ -2,7 +2,7 @@
 
 PODMAN=0x10
 DOCKER=0x01
-KUBECTL_CHANNEL="1.33/stable"
+KUBEV="v1.32.11"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -87,18 +87,18 @@ ask_installation() {
 ask_driver() {
     while true; do
         echo "$(t 'driver.question')"
-        echo "  1) $(t 'driver.podman')"
-        echo "  2) $(t 'driver.docker')"
+        echo "  1) $(t 'driver.docker')"
+        echo "  2) $(t 'driver.podman')"
         read -p "$(t 'driver.prompt') " choix
         case $choix in
             1 )
-                DRIVER=$PODMAN
-                echo "$(t 'driver.podman_selected')"
+                DRIVER=$DOCKER
+                echo "$(t 'driver.docker_selected')"
                 break
                 ;;
             2 )
-                DRIVER=$DOCKER
-                echo "$(t 'driver.docker_selected')"
+                DRIVER=$PODMAN
+                echo "$(t 'driver.podman_selected')"
                 break
                 ;;
             * )
@@ -158,20 +158,39 @@ main() {
     echo ""
     
     # === ORIGINAL SCRIPT ===
-    minikube stop || true
-    minikube delete || true
 
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
-        printf "%s\n" "Install Circleci Snap..."
-        sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
-        sudo zypper --gpg-auto-import-keys refresh
-        sudo zypper dup --from snappy
-        sudo zypper install snapd
-        sudo systemctl enable --now snapd
-        sudo systemctl enable --now snapd.apparmor
+        printf "%s\n" "$(t 'install.dependencies')"
+	if ! command -v minikube &> /dev/null; then
+            dir="$(pwd)"; cd "/home/$USER"
+	    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+	    chmod 0644 minikube-linux-amd64
+	    sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+	    cd "$dir"
+ 	fi
+	if ! command -v snap &> /dev/null; then
+            sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
+            sudo zypper --gpg-auto-import-keys refresh
+            sudo zypper dup --from snappy
+            sudo zypper install snapd
+            sudo systemctl enable --now snapd
+            sudo systemctl enable --now snapd.apparmor
+	fi
         sudo snap install circleci
+	sudo snap install helm --classic
+        if ! command -v kubectl &> /dev/null; then
+	    alias kubectl="minikube kubectl --"
+	fi
         if (( DRIVER & DOCKER )); then
+           sudo snap remove docker
+            if ! command -v docker  &> /dev/null; then
+                dir="$(pwd)"; cd "/home/$USER"
+	        curl -fsSL https://get.docker.com/rootless -o get-docker.sh
+		chmod 0755 get=docker.sh
+ 		./get-docker.sh
+		cd "$dir"
+            fi
             snap install docker
             sudo snap connect circleci:docker docker
         fi
@@ -179,13 +198,7 @@ main() {
             snap install --edge --devmode podman
             sudo snap connect circleci:docker podman
         fi
-        printf "%s\n" "done..."
-
-        printf "%s\n" "You can invoke CLI with /snap/bin/circleci"
-
-        printf "%s\n" "Install $KUBECTL_CHANNEL..."
-        sudo snap install kubectl --channel="$KUBECTL_CHANNEL" --classic
-        printf "%s\n" "done."
+        printf "%s\n" "$(t 'install.done')"
 
         printf "%s\n"  "[[registry]]" \
         "  # DockerHub" \
@@ -196,26 +209,27 @@ main() {
         "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
         "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
         | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
-        printf "%s\n" "Copied to the user containers path..."
-        cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
+        printf "%s\n" "$(t 'install.containers_copied')"
+        cp -Rvf /etc/containers/registries.conf.d "/home/$USER/.config/containers/"
     fi
+
+    minikube -p sysbox stop || true
+    minikube -p sysbox delete || true
     
     if (( DRIVER & PODMAN )); then
-        minikube start --driver=podman --container-runtime=cri-o
+        minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
     fi
     
     if (( DRIVER & DOCKER )); then
-        if (( INSTALL & DOCKER )); then
-            dockerd-rootless-setuptool.sh install -f
-            docker context use rootless
-        fi
-        minikube start --driver=docker --container-runtime=containerd
+        minikube start --driver=docker --container-runtime=containerd -p sysbox --kubernetes-version="$KUBEV"
     fi
     
-    minikube addons enable metrics-server
+    minikube -p sysbox addons enable metrics-server
+    minikube profile list
     
     echo ""
     echo "$(t 'main.success')"
+    printf "%s\n" "$(t 'install.invoke') circleci setup"
 }
 
 # Start the script
