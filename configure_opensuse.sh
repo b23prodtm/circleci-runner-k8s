@@ -161,7 +161,7 @@ main() {
 
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
-        printf "%s\n" "Install Minikube Circleci Snap..."
+        printf "%s\n" "$(t 'install.dependencies')"
 	curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
 	sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
         sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
@@ -181,9 +181,9 @@ main() {
             snap install --edge --devmode podman
             sudo snap connect circleci:docker podman
         fi
-        printf "%s\n" "done..."
+        printf "%s\n" "$(t 'install.done')"
 
-        printf "%s\n" "You can invoke CLI with /snap/bin/circleci"
+        printf "%s\n" "$(t 'install.invoke') /snap/bin/circleci"
 
         printf "%s\n"  "[[registry]]" \
         "  # DockerHub" \
@@ -194,7 +194,7 @@ main() {
         "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
         "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
         | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
-        printf "%s\n" "Copied to the user containers path..."
+        printf "%s\n" "$(t 'install.containers_copied')"
         cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
     fi
 
