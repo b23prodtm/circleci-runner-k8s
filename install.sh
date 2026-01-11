@@ -170,6 +170,8 @@ main() {
     
     echo "$(t 'installation.main.starting')"
     echo ""
+
+    alias kubectl="minikube.ctl --"
     
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"

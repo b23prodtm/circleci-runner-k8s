@@ -162,8 +162,8 @@ main() {
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
         printf "%s\n" "Install Minikube Circleci Snap..."
-	curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-latest.x86_64.rpm
-	sudo rpm -Uvh minikube-latest.x86_64.rpm
+	curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+	sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
         sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
         sudo zypper --gpg-auto-import-keys refresh
         sudo zypper dup --from snappy
@@ -171,7 +171,8 @@ main() {
         sudo systemctl enable --now snapd
         sudo systemctl enable --now snapd.apparmor
         sudo snap install circleci
-        alias kubectl="minikube.ctl --"
+	sudo snap install helm --classic
+        alias kubectl="minikube kubectl --"
         if (( DRIVER & DOCKER )); then
             snap install docker
             sudo snap connect circleci:docker docker
