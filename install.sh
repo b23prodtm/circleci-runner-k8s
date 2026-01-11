@@ -172,8 +172,8 @@ main() {
     echo ""
 
     if ! command -v kubectl &> /dev/null; then
-        alias kubectl="minikube kubectl --"
-    fi    
+        sudo snap install kubectl --classic
+    fi
 
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"
@@ -202,11 +202,13 @@ main() {
     
     if (( GATEWAY_INSTALL & HELM_UPGRADE )); then  
         printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
+        dir="$(pwd)"; cd  "/home/$USER"
         helm pull oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" --untar
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/gatewayapi-crds.yaml
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/generated
         helm upgrade eg oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" -n envoy-gateway-system
         rm -Rfv ./gateway-helm
+	cd "$dir"
     fi
     printf "%s\n" "$(t 'installation.steps.done')"
 
