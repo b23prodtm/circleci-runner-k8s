@@ -167,7 +167,9 @@ main() {
         
         # Update package list
         sudo apt-get update
-        
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+	sudo dpkg -i minikube_latest_amd64.deb
+
         # Install snapd if not already installed
         if ! command -v snap &> /dev/null; then
             sudo apt-get install -y snapd
@@ -178,7 +180,7 @@ main() {
         fi
         
         # Install CircleCI CLI
-        sudo snap install minikube circleci
+        sudo snap install circleci
 	alias kubectl="minikube.ctl --"
         
         if (( DRIVER & DOCKER )); then
