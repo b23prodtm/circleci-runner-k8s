@@ -163,8 +163,11 @@ main() {
         printf "%s\n" ""
         printf "%s\n" "$(t 'install.dependencies')"
 	if ! command -v minikube &> /dev/null; then
+            dir="$(pwd)"; cd "/home/$USER"
 	    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+	    chmod 0644 minikube-linux-amd64
 	    sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+	    cd "$dir"
  	fi
 	if ! command -v snap &> /dev/null; then
             sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
@@ -180,9 +183,13 @@ main() {
 	    alias kubectl="minikube kubectl --"
 	fi
         if (( DRIVER & DOCKER )); then
-	    if ! command -v docker &> /dev/null; then
+           sudo snap remove docker
+            if ! command -v docker  &> /dev/null; then
+                dir="$(pwd)"; cd "/home/$USER"
 	        curl -fsSL https://get.docker.com/rootless -o get-docker.sh
-                sudo sh ./get-docker.sh
+		chmod 0755 get=docker.sh
+ 		./get-docker.sh
+		cd "$dir"
             fi
             snap install docker
             sudo snap connect circleci:docker docker
@@ -216,11 +223,6 @@ main() {
     fi
     
     if (( DRIVER & DOCKER )); then
-        if (( INSTALL & DOCKER )); then
-            dockerd-rootless-setuptool.sh install -f
-	    unset DOCKER_HOST
-            docker context use rootless
-        fi
         minikube start --driver=docker --container-runtime=containerd -p sysbox --kubernetes-version="$KUBEV"
     fi
     

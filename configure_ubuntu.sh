@@ -166,9 +166,13 @@ main() {
         # Update package list
         sudo apt-get update
 	if ! command -v minikube &> /dev/null; then
-	    sudo apt-get install curl
-            curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-            sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+            sudo apt-get install curl
+	    dir="$(pwd)"; cd "/home/$USER"
+	    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+	    chmod 0644 minikube_latest_amd64.deb
+	    sudo dpkg -i minikube_latest_amd64.deb
+	    rm minikube_latest_amd64.deb
+	    cd "$dir"
 	fi
 
         # Install snapd if not already installed
@@ -188,9 +192,14 @@ main() {
 	fi
         
         if (( DRIVER & DOCKER )); then
-	    if ! command -v docker &> /dev/null; then
+	    sudo snap remove docker
+	    if ! command -v docker  &> /dev/null; then
+	        sudo apt-get install curl
+    	        dir="$(pwd)"; cd "/home/$USER"
                 curl -fsSL https://get.docker.com/rootless -o get-docker.sh
-                sudo sh ./get-docker.sh
+		chmod 0755 get-docker.sh
+                ./get-docker.sh
+		cd "$dir"
             fi
             # Install Docker via snap
             sudo snap install docker
@@ -238,14 +247,6 @@ main() {
     fi
     
     if (( DRIVER & DOCKER )); then
-        if (( INSTALL & DOCKER )); then
-            # Install Docker rootless if not already configured
-            if command -v dockerd-rootless-setuptool.sh &> /dev/null; then
-                dockerd-rootless-setuptool.sh install -f
-                unset DOCKER_HOST
-                docker context use rootless
-            fi
-        fi
         minikube start --driver=docker --container-runtime=containerd -p sysbox --kubernetes-version="$KUBEV"
     fi
     
