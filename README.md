@@ -9,7 +9,7 @@ Installation and configuration scripts for Minikube with CircleCI Container Agen
 
 ```bash
 # Installation on Ubuntu (Recommended)
-sudo zypper install jq kubectl
+sudo apt install -y jq kubectl
 ```
 
 ```bash
