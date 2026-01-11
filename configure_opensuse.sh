@@ -162,17 +162,23 @@ main() {
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
         printf "%s\n" "$(t 'install.dependencies')"
-	curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-	sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
-        sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
-        sudo zypper --gpg-auto-import-keys refresh
-        sudo zypper dup --from snappy
-        sudo zypper install snapd
-        sudo systemctl enable --now snapd
-        sudo systemctl enable --now snapd.apparmor
+	if ! command -v minikube &> /dev/null; then
+	    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+	    sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+ 	fi
+	if ! command -v snap &> /dev/null; then
+            sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
+            sudo zypper --gpg-auto-import-keys refresh
+            sudo zypper dup --from snappy
+            sudo zypper install snapd
+            sudo systemctl enable --now snapd
+            sudo systemctl enable --now snapd.apparmor
+	fi
         sudo snap install circleci
 	sudo snap install helm --classic
-        alias kubectl="minikube kubectl --"
+        if ! command -v kubectl &> /dev/null; then
+	    alias kubectl="minikube kubectl --"
+	fi
         if (( DRIVER & DOCKER )); then
             snap install docker
             sudo snap connect circleci:docker docker
