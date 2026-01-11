@@ -180,6 +180,10 @@ main() {
 	    alias kubectl="minikube kubectl --"
 	fi
         if (( DRIVER & DOCKER )); then
+	    if ! command -v docker &> /dev/null; then
+	        curl -fsSL https://get.docker.com/rootless -o get-docker.sh
+                sudo sh ./get-docker.sh
+            fi
             snap install docker
             sudo snap connect circleci:docker docker
         fi
@@ -189,7 +193,7 @@ main() {
         fi
         printf "%s\n" "$(t 'install.done')"
 
-        printf "%s\n" "$(t 'install.invoke') /snap/bin/circleci"
+        printf "%s\n" "$(t 'install.invoke') circleci"
 
         printf "%s\n"  "[[registry]]" \
         "  # DockerHub" \
@@ -201,7 +205,7 @@ main() {
         "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
         | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
         printf "%s\n" "$(t 'install.containers_copied')"
-        cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
+        cp -Rvf /etc/containers/registries.conf.d "/home/$USER/.config/containers/"
     fi
 
     minikube -p sysbox stop || true

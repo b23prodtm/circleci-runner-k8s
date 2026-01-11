@@ -161,13 +161,15 @@ main() {
 
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
-        printf "%s\n" "Installing Snapd , minikube and CircleCI..."
+        printf "%s\n" "$(t 'install.dependencies')"
         
         # Update package list
         sudo apt-get update
-	sudo apt-get install curl
-	curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-	sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+	if ! command -v minikube &> /dev/null; then
+	    sudo apt-get install curl
+            curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+            sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+	fi
 
         # Install snapd if not already installed
         if ! command -v snap &> /dev/null; then
@@ -181,9 +183,15 @@ main() {
         # Install CircleCI CLI, helm
         sudo snap install circleci
 	sudo snap install helm --classic
-	alias kubectl="minikube kubectl --"
+        if ! command -v kubectl &> /dev/null; then
+	    alias kubectl="minikube kubectl --"
+	fi
         
         if (( DRIVER & DOCKER )); then
+	    if ! command -v docker &> /dev/null; then
+                curl -fsSL https://get.docker.com/rootless -o get-docker.sh
+                sudo sh ./get-docker.sh
+            fi
             # Install Docker via snap
             sudo snap install docker
             sudo snap connect circleci:docker docker
@@ -199,12 +207,12 @@ main() {
             # sudo snap connect circleci:docker podman
         fi
         
-        printf "%s\n" "done..."
-        printf "%s\n" "You can invoke CLI with /snap/bin/circleci"
+        printf "%s\n" "$(t 'install.done')"
+        printf "%s\n" "$(t 'install.invoke') circleci"
 
         # Create registries configuration directories
         sudo mkdir -p /etc/containers/registries.conf.d
-        mkdir -p /home/$USER/.config/containers/registries.conf.d
+        mkdir -p "/home/$USER/.config/containers/registries.conf.d"
         
         # Configure container registries
         printf "%s\n"  "[[registry]]" \
