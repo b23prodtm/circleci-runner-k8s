@@ -6,12 +6,15 @@ Installation and configuration scripts for Minikube with CircleCI Container Agen
 
 - `jq` - For JSON translation parsing
 - `kubectl` - For Kubernetes management
-- `helm` - For Helm installations
-- `minikube` - For local Kubernetes cluster
+
+```bash
+# Installation on Ubuntu (Recommended)
+sudo zypper install jq kubectl
+```
 
 ```bash
 # Installation on openSUSE
-sudo zypper install jq kubectl helm minikube
+sudo zypper install jq kubectl
 ```
 
 ## 🔧 Configuration
