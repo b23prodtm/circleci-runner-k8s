@@ -217,7 +217,6 @@ main() {
         fi
         
         printf "%s\n" "$(t 'install.done')"
-        printf "%s\n" "$(t 'install.invoke') circleci"
 
         # Create registries configuration directories
         sudo mkdir -p /etc/containers/registries.conf.d
@@ -255,6 +254,7 @@ main() {
     
     echo ""
     echo "$(t 'main.success')"
+    printf "%s\n" "$(t 'install.invoke') circleci setup"
 }
 
 # Start the script

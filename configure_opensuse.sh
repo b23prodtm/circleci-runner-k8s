@@ -200,8 +200,6 @@ main() {
         fi
         printf "%s\n" "$(t 'install.done')"
 
-        printf "%s\n" "$(t 'install.invoke') circleci"
-
         printf "%s\n"  "[[registry]]" \
         "  # DockerHub" \
         "  \"location\" = \"docker.io\"" \
@@ -231,6 +229,7 @@ main() {
     
     echo ""
     echo "$(t 'main.success')"
+    printf "%s\n" "$(t 'install.invoke') circleci setup"
 }
 
 # Start the script
