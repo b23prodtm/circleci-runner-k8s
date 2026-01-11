@@ -171,8 +171,10 @@ main() {
     echo "$(t 'installation.main.starting')"
     echo ""
 
-    alias kubectl="minikube.ctl --"
-    
+    if ! command -v kubectl &> /dev/null; then
+        alias kubectl="minikube kubectl --"
+    fi    
+
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"
     kubectl label nodes sysbox sysbox-install=yes
