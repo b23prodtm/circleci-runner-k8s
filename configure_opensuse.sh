@@ -170,7 +170,8 @@ main() {
         sudo zypper install snapd
         sudo systemctl enable --now snapd
         sudo systemctl enable --now snapd.apparmor
-        sudo snap install circleci
+        sudo snap install minikube circleci
+        alias kubectl="minikube.ctl --"
         if (( DRIVER & DOCKER )); then
             snap install docker
             sudo snap connect circleci:docker docker

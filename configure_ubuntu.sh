@@ -163,7 +163,7 @@ main() {
 
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
-        printf "%s\n" "Installing Snapd and CircleCI..."
+        printf "%s\n" "Installing Snapd , minikube and CircleCI..."
         
         # Update package list
         sudo apt-get update
@@ -178,7 +178,8 @@ main() {
         fi
         
         # Install CircleCI CLI
-        sudo snap install circleci
+        sudo snap install minikube circleci
+	alias kubectl="minikube.ctl --"
         
         if (( DRIVER & DOCKER )); then
             # Install Docker via snap
