@@ -4,11 +4,15 @@
       "title": "Minikube Configuration"
     },
     "install": {
-      "question": "Do you want to install dependencies (Circleci, Snap, etc.)?",
+      "question": "Do you want to install dependencies?",
       "prompt": "Answer (y/n):",
       "enabled": "✓ Installation enabled",
       "disabled": "✓ Installation disabled",
-      "invalid": "Please answer 'y' (yes) or 'n' (no)"
+      "invalid": "Please answer 'y' (yes) or 'n' (no)",
+      "dependencies": "Installing dependencies...",
+      "done": "...done!",
+      "invoke": "Invoke in the command line",
+      "containers_copied": "Containers path copied for the user."
     },
     "driver": {
       "question": "Which driver would you like to use?",
@@ -79,11 +83,15 @@
       "title": "Configuration Minikube"
     },
     "install": {
-      "question": "Voulez-vous installer les dépendances (Circleci, Snap, etc.) ?",
+      "question": "Voulez-vous installer les dépendances ?",
       "prompt": "Réponse (o/n) :",
       "enabled": "✓ Installation activée",
       "disabled": "✓ Installation désactivée",
-      "invalid": "Veuillez répondre par 'o' (oui) ou 'n' (non)"
+      "invalid": "Veuillez répondre par 'o' (oui) ou 'n' (non)",
+      "dependencies": "Installation des dépendences...",
+      "done": "...fait!",
+      "invoke": "Tapez la commande en ligne comme ceci",
+      "containers_copied": "Le chemin des containers copié pour l'utilisateur."
     },
     "driver": {
       "question": "Quel driver souhaitez-vous utiliser ?",
