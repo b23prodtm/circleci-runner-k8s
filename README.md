@@ -3,7 +3,7 @@
 Installation and configuration scripts for Minikube with CircleCI Container Agent and Envoy Gateway.
 
 ## 📋 Prerequisites
-
+- An extensible disk space on the node or virtual disk storage for minikube (100+ of GigaBytes)
 - `jq` - For JSON translation parsing
 - `kubectl` - For Kubernetes management
 
@@ -174,7 +174,7 @@ grep "token:" values.yaml
 
 ## 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the Apache License 2.0.
 
 ## 🤝 Contributing
 
