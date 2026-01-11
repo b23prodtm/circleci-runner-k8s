@@ -158,8 +158,6 @@ main() {
     echo ""
     
     # === UBUNTU-SPECIFIC INSTALLATION ===
-    minikube -p sysbox stop || true
-    minikube -p sysbox delete || true
 
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
@@ -221,6 +219,9 @@ main() {
         printf "%s\n" "Copied to the user containers path..."
         cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
     fi
+
+    minikube -p sysbox stop || true
+    minikube -p sysbox delete || true
     
     if (( DRIVER & PODMAN )); then
         minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
