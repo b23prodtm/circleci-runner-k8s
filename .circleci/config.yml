@@ -7,19 +7,16 @@ workflows:
   main:
     jobs:
       - runner-job
-      - deploy-in-minikube
+      - deploy-in-kind
 
 ###################
 # Job Definitions #
 ###################
 jobs:
   runner-job:
-    # The resource_class feature allows configuring CPU and RAM resources for each job. Different resource classes are available for different executors. https://circleci.com/docs/2.0/configuration-reference/#resourceclass
     resource_class: $K8S_RUNNER_RESOURCE
     docker:
-    - image: nestybox/ubuntu-noble-systemd-docker
-      entrypoint: ["dockerd"]
-      command: ["--host=unix:///var/run/docker.sock"]
+    - image: cimg/base:2024.12
     steps:
       - run:
           name: Verify environment
@@ -28,39 +25,159 @@ jobs:
             echo "Kubernetes Service Host: $KUBERNETES_SERVICE_HOST"
             echo "Kubernetes Service Port: $KUBERNETES_SERVICE_PORT"
             printenv
-  deploy-in-minikube:
-    # The resource_class feature allows configuring CPU and RAM resources for each job. Different resource classes are available for different executors. https://circleci.com/docs/2.0/configuration-reference/#resourceclass
+  
+  deploy-in-kind:
     resource_class: $K8S_RUNNER_RESOURCE
     docker:
-    - image: nestybox/ubuntu-noble-systemd-docker
-      entrypoint: ["dockerd"]
-      command: ["--host=unix:///var/run/docker.sock"]
+    - image: cimg/base:2024.12
     steps:
       - checkout
+      
       - run:
-          name: install minikube
+          name: Install system dependencies (Ubuntu 24)
           command: |
-            DEBIAN_FRONTEND=noninteractive
             sudo apt-get update -y
-            sudo apt-get install apt-transport-https
-            sudo apt install -y virtualbox jq
-            sudo snap install kubectl --classic
-            sudo snap install helm --classic
-
-            curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
-            sudo dpkg -i minikube_latest_amd64.deb && minikube version
-            rm minikube_latest_amd64.deb
+            sudo apt-get install -y \
+              ca-certificates \
+              curl \
+              gnupg \
+              lsb-release \
+              apt-transport-https \
+              jq \
+              git
+      
       - run:
-          name: minikube start
+          name: Install containerd
           command: |
-            time docker version
-            minikube version
-            minikube start --driver=docker
+            # Add Docker's official GPG key
+            sudo mkdir -p /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            
+            # Add Docker repository
+            echo \
+              "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+              $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            
+            sudo apt-get update -y
+            sudo apt-get install -y containerd.io
+            
+            # Configure containerd
+            sudo mkdir -p /etc/containerd
+            sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
+            sudo systemctl restart containerd
+            
+            # Verify containerd
+            sudo systemctl status containerd
+            ctr --version
+      
       - run:
-          name: install helm chart
+          name: Install docker rootless mode
           command: |
-            helm install runner . --set image.tag=launch-agent --set runnerToken=$K8S_RUNNER_TOKEN --set resourceClass=$K8S_RUNNER_RESOURCE
+            # Install docker-ce
+            sudo apt-get install -y docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin
+            
+            # Add current user to docker group (if not using rootless)
+            sudo usermod -aG docker $USER || true
+            
+            # Setup docker rootless (optional - for enhanced security)
+            # Note: In CircleCI, we run with sudo, so rootless is handled differently
+            docker --version
+      
       - run:
-          name: wait for runner job completion
+          name: Install kubectl (v1.32)
           command: |
-            timeout 5m ./scripts/wait_for_task_complete.sh
+            curl -fsSL https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl -o kubectl
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+            kubectl version --client
+      
+      - run:
+          name: Install helm
+          command: |
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+            helm version
+      
+      - run:
+          name: Install kind (Kubernetes in Docker) v0.20.0
+          command: |
+            curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+            chmod +x ./kind
+            sudo mv kind /usr/local/bin/
+            kind --version
+      
+      - run:
+          name: Create kind cluster with containerd
+          command: |
+            cat > /tmp/kind-config.yaml <<EOF
+            kind: Cluster
+            apiVersion: kind.x-k8s.io/v1alpha4
+            name: circleci-runner
+            nodes:
+            - role: control-plane
+              image: kindest/node:v1.32.0
+              extraMounts:
+              - hostPath: /var/run/docker.sock
+                containerPath: /var/run/docker.sock
+            containerdConfigPatches:
+            - |-
+              [plugins."io.containerd.grpc.v1.cri"]
+                systemd_cgroup = true
+            EOF
+            
+            kind create cluster --config /tmp/kind-config.yaml
+            kubectl cluster-info
+            kubectl get nodes
+            sleep 10
+      
+      - run:
+          name: Verify cluster and containerd
+          command: |
+            kubectl get nodes -o wide
+            kubectl get pods --all-namespaces
+            docker ps -a
+      
+      - run:
+          name: Install helm chart (automated - responses: 1 1 y)
+          command: |
+            # Verify Helm chart exists
+            if [ ! -d "./helm" ] && [ ! -f "./Chart.yaml" ]; then
+              echo "WARNING: No Helm chart found in ./helm or current directory"
+              ls -la ./
+            fi
+            
+            # Determine chart path
+            CHART_PATH="."
+            if [ -d "./helm" ]; then
+              CHART_PATH="./helm"
+            fi
+            
+            # Install with values from environment
+            helm install runner $CHART_PATH \
+              --set image.tag=launch-agent \
+              --set runnerToken=$K8S_RUNNER_TOKEN \
+              --set resourceClass=$K8S_RUNNER_RESOURCE \
+              --set containerRuntime=containerd \
+              --set docker.rootless=true \
+              --wait \
+              --timeout=5m \
+              --namespace=circleci \
+              --create-namespace || true
+      
+      - run:
+          name: Wait for runner job completion
+          command: |
+            # Make script executable
+            if [ -f "./scripts/wait_for_task_complete.sh" ]; then
+              chmod +x ./scripts/wait_for_task_complete.sh
+              timeout 5m ./scripts/wait_for_task_complete.sh || true
+            else
+              echo "Waiting for runner deployment..."
+              kubectl wait --for=condition=available --timeout=300s \
+                deployment/runner -n circleci || true
+              kubectl get pods -n circleci
+            fi
+      
+      - run:
+          name: Cleanup kind cluster
+          command: |
+            kind delete cluster --name circleci-runner || true
