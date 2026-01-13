@@ -18,7 +18,9 @@ jobs:
   runner-job:
     resource_class: medium
     docker:
-    - image: cimg/base:2024.12
+      - image: nestybox/ubuntu-noble-systemd-docker
+        entrypoint: ["dockerd"]
+        command: ["--host=unix:///var/run/docker.sock"]
     steps:
       - run:
           name: Verify environment
@@ -31,7 +33,9 @@ jobs:
   deploy-in-kind:
     resource_class: medium
     docker:
-    - image: cimg/base:2024.12
+      - image: nestybox/ubuntu-noble-systemd-docker
+        entrypoint: ["dockerd"]
+        command: ["--host=unix:///var/run/docker.sock"]
     steps:
       - checkout
       - run:
