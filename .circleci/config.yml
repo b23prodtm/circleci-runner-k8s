@@ -54,14 +54,14 @@ jobs:
       - run:
           name: Install docker and mini k8s
           command: |
-            printf "1\n1\ny\n" | ./configure_ubuntu.sh
+            printf "1\ny\n1\ny\n" | ./configure_ubuntu.sh
       
       - run:
           name: Install helm and charts
           command: |
             sed -i -e "s/(ENTER_YOUR_CIRCLECI_TOKEN_HERE)/$K8S_RUNNER_TOKEN/" \
             -e "s#(MY-ORG/RESOURCE-CLASS)#$K8S_RUNNER_RESOURCE#" values.yaml
-            ./install.sh
+            printf "1\n1\ny\n" | ./install.sh
       - run:
           name: "Install helm chart circle ci"
           command: |
