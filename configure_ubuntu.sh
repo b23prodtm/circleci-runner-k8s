@@ -165,15 +165,15 @@ main() {
         
         # Update package list
         sudo apt-get update
-	if ! command -v minikube &> /dev/null; then
+	    if ! command -v minikube &> /dev/null; then
             sudo apt-get install curl
-	    dir="$(pwd)"; cd "/home/$USER"
-	    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
-	    chmod 0644 minikube_latest_amd64.deb
-	    sudo dpkg -i minikube_latest_amd64.deb
-	    rm minikube_latest_amd64.deb
-	    cd "$dir"
-	fi
+            dir="$(pwd)"; cd "/home/$USER"
+    	    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+    	    chmod 0644 minikube_latest_amd64.deb
+    	    sudo dpkg -i minikube_latest_amd64.deb
+    	    rm minikube_latest_amd64.deb
+    	    cd "$dir"
+    	fi
 
         # Install snapd if not already installed
         if ! command -v snap &> /dev/null; then
@@ -186,24 +186,24 @@ main() {
         
         # Install CircleCI CLI, helm
         sudo snap install circleci
-	sudo snap install helm --classic
+    	sudo snap install helm --classic
         if ! command -v kubectl &> /dev/null; then
-	    alias kubectl="minikube kubectl --"
-	fi
+    	    alias kubectl="minikube kubectl --"
+    	fi
         
         if (( DRIVER & DOCKER )); then
-	    sudo snap remove docker
-	    if ! command -v docker  &> /dev/null; then
-	        sudo apt-get install curl
-    	        dir="$(pwd)"; cd "/home/$USER"
+    	    sudo snap remove docker
+    	    if ! command -v docker  &> /dev/null; then
+    	        sudo apt-get install -y curl
+                dir="$(pwd)"; cd "/home/$USER"
                 curl -fsSL https://get.docker.com/rootless -o get-docker.sh
-		chmod 0755 get-docker.sh
+        		chmod 0755 get-docker.sh
                 ./get-docker.sh
-		cd "$dir"
+        		cd "$dir"
             fi
-            # Install Docker via snap
-            sudo snap install docker
-            sudo snap connect circleci:docker docker
+            # If user still wants snap version, uncomment:
+            #sudo snap install docker
+            #sudo snap connect circleci:docker docker
         fi
         
         if (( DRIVER & PODMAN )); then
@@ -212,8 +212,8 @@ main() {
             sudo apt-get install -y podman
             
             # If user still wants snap version, uncomment:
-            # sudo snap install --edge --devmode podman
-            # sudo snap connect circleci:docker podman
+            #sudo snap install --edge --devmode podman
+            #sudo snap connect circleci:docker podman
         fi
         
         printf "%s\n" "$(t 'install.done')"
