@@ -18,9 +18,10 @@ jobs:
   runner-job:
     resource_class: medium
     docker:
-      - image: nestybox/ubuntu-noble-systemd-docker
-        entrypoint: ["dockerd"]
-        command: ["--host=unix:///var/run/docker.sock"]
+      #- image: nestybox/ubuntu-noble-systemd-docker
+      #  entrypoint: ["dockerd"]
+      #  command: ["--host=unix:///var/run/docker.sock"]
+      - image: cimg/base:2024.12
     steps:
       - run:
           name: Verify environment
@@ -33,9 +34,10 @@ jobs:
   deploy-in-kind:
     resource_class: medium
     docker:
-      - image: nestybox/ubuntu-noble-systemd-docker
-        entrypoint: ["dockerd"]
-        command: ["--host=unix:///var/run/docker.sock"]
+      #- image: nestybox/ubuntu-noble-systemd-docker
+      #  entrypoint: ["dockerd"]
+      #  command: ["--host=unix:///var/run/docker.sock"]
+      - image: cimg/base:2024.12
     steps:
       - checkout
       - run:
@@ -52,9 +54,9 @@ jobs:
               git
       
       - run:
-          name: Install docker and mini k8s
+          name: Install podman and mini k8s
           command: |
-            printf "1\ny\n1\ny\n" | ./configure_ubuntu.sh
+            printf "1\ny\n2\ny\n" | ./configure_ubuntu.sh
       
       - run:
           name: Install helm and charts
