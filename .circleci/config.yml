@@ -6,32 +6,14 @@ version: 2.1
 workflows:
   main:
     jobs:
-      - runner-job:
-          context: Info-b23prodtm
-      - deploy-in-kind:
+      - runner-test:
           context: Info-b23prodtm
 
 ###################
 # Job Definitions #
 ###################
 jobs:
-  runner-job:
-    resource_class: medium
-    docker:
-      #- image: nestybox/ubuntu-noble-systemd-docker
-      #  entrypoint: ["dockerd"]
-      #  command: ["--host=unix:///var/run/docker.sock"]
-      - image: cimg/base:2024.12
-    steps:
-      - run:
-          name: Verify environment
-          command: |
-            echo "Executing runner in a k8s cluster"
-            echo "Kubernetes Service Host: $KUBERNETES_SERVICE_HOST"
-            echo "Kubernetes Service Port: $KUBERNETES_SERVICE_PORT"
-            printenv
-  
-  deploy-in-kind:
+  runner-test:
     resource_class: medium
     docker:
       #- image: nestybox/ubuntu-noble-systemd-docker
@@ -41,72 +23,21 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install system dependencies (Ubuntu 24)
+          name: Verify environment
           command: |
-            sudo apt-get update -y
-            sudo apt-get install -y \
-              ca-certificates \
-              curl \
-              gnupg \
-              lsb-release \
-              apt-transport-https \
-              jq \
-              git
-      
+            printenv
       - run:
-          name: Install podman and mini k8s
+          name: Install podman and minikube
           command: |
             printf "1\ny\n2\ny\n" | ./configure_ubuntu.sh
-      
       - run:
           name: Install helm and charts
           command: |
             cp values.yaml.example values.yaml
-            sed -i -e "s/(YOUR_CIRCLECI_TOKEN_HERE)/$K8S_RUNNER_TOKEN/" \
-            -e "s#(MY_ORG/RESOURCE_CLASS_HERE)#$K8S_RUNNER_RESOURCE#" values.yaml
+            sed -i -e "s/(YOUR_CIRCLECI_TOKEN_HERE)/${K8S_RUNNER_TOKEN}/" \
+            -e "s#(MY_ORG/RESOURCE_CLASS_HERE)#${K8S_RUNNER_RESOURCE}#" values.yaml
             printf "1\n1\ny\n" | ./install.sh
       - run:
-          name: "Install helm chart circle ci"
-          command: |
-            # Verify Helm chart exists
-            if [ ! -d "./helm" ] && [ ! -f "./Chart.yaml" ]; then
-              echo "WARNING: No Helm chart found in ./helm or current directory"
-              ls -la ./
-            fi
-            
-            # Determine chart path
-            CHART_PATH="."
-            if [ -d "./helm" ]; then
-              CHART_PATH="./helm"
-            fi
-            
-            # Install with values from environment
-            helm install runner $CHART_PATH \
-              --set image.tag=launch-agent \
-              --set runnerToken=$K8S_RUNNER_TOKEN \
-              --set resourceClass=$K8S_RUNNER_RESOURCE \
-              --set containerRuntime=containerd \
-              --set docker.rootless=true \
-              --wait \
-              --timeout=5m \
-              --namespace=circleci \
-              --create-namespace || true
-      
-      - run:
-          name: Wait for runner job completion
-          command: |
-            # Make script executable
-            if [ -f "./scripts/wait_for_task_complete.sh" ]; then
-              chmod +x ./scripts/wait_for_task_complete.sh
-              timeout 5m ./scripts/wait_for_task_complete.sh || true
-            else
-              echo "Waiting for runner deployment..."
-              kubectl wait --for=condition=available --timeout=300s \
-                deployment/runner -n circleci || true
-              kubectl get pods -n circleci
-            fi
-      
-      - run:
-          name: Cleanup kind cluster
+          name: Cleanup cluster
           command: |
             minikube delete -p sysbox || true
