@@ -170,33 +170,37 @@ main() {
 	    cd "$dir"
  	fi
 	if ! command -v snap &> /dev/null; then
-            sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
-            sudo zypper --gpg-auto-import-keys refresh
-            sudo zypper dup --from snappy
-            sudo zypper install snapd
-            sudo systemctl enable --now snapd
-            sudo systemctl enable --now snapd.apparmor
+        sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
+        sudo zypper --gpg-auto-import-keys refresh
+        sudo zypper dup --from snappy
+        sudo zypper install snapd
+        sudo systemctl enable --now snapd
+        sudo systemctl enable --now snapd.apparmor
 	fi
-        sudo snap install circleci
+    sudo snap install circleci
 	sudo snap install helm --classic
-        if ! command -v kubectl &> /dev/null; then
+    if ! command -v kubectl &> /dev/null; then
 	    alias kubectl="minikube kubectl --"
 	fi
         if (( DRIVER & DOCKER )); then
-           sudo snap remove docker
             if ! command -v docker  &> /dev/null; then
                 dir="$(pwd)"; cd "/home/$USER"
-	        curl -fsSL https://get.docker.com/rootless -o get-docker.sh
-		chmod 0755 get=docker.sh
- 		./get-docker.sh
-		cd "$dir"
+    	        curl -fsSL https://get.docker.com/rootless -o get-docker.sh
+        		chmod 0755 get=docker.sh
+         		./get-docker.sh
+        		cd "$dir"
+                # If user still wants snap version, uncomment:
+                #snap install docker
+                #sudo snap connect circleci:docker docker
             fi
-            snap install docker
-            sudo snap connect circleci:docker docker
         fi
         if (( DRIVER & PODMAN )); then
-            snap install --edge --devmode podman
-            sudo snap connect circleci:docker podman
+            if ! command -v docker  &> /dev/null; then
+                sudo zypper install podman
+                # If user still wants snap version, uncomment:
+                #snap install --edge --devmode podman
+                #sudo snap connect circleci:docker podman
+            fi
         fi
         printf "%s\n" "$(t 'install.done')"
 
