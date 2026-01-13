@@ -108,7 +108,7 @@ jobs:
       - run:
           name: Create kind cluster with containerd
           command: |
-            cat > /tmp/kind-config.yaml <<EOF
+            cat > /tmp/kind-config.yaml \<<EOF
             kind: Cluster
             apiVersion: kind.x-k8s.io/v1alpha4
             name: circleci-runner
@@ -137,7 +137,7 @@ jobs:
             docker ps -a
       
       - run:
-          name: Install helm chart (automated - responses: 1 1 y)
+          name: "Install helm chart circle ci"
           command: |
             # Verify Helm chart exists
             if [ ! -d "./helm" ] && [ ! -f "./Chart.yaml" ]; then
