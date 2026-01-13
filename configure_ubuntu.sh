@@ -192,7 +192,6 @@ main() {
     	fi
         
         if (( DRIVER & DOCKER )); then
-    	    sudo snap remove docker
     	    if ! command -v docker  &> /dev/null; then
     	        sudo apt-get install -y curl
                 dir="$(pwd)"; cd "/home/$USER"
@@ -200,22 +199,22 @@ main() {
         		chmod 0755 get-docker.sh
                 ./get-docker.sh
         		cd "$dir"
+                # If user still wants snap version, uncomment:
+                #sudo snap install docker
+                #sudo snap connect circleci:docker docker
             fi
-            # If user still wants snap version, uncomment:
-            #sudo snap install docker
-            #sudo snap connect circleci:docker docker
         fi
-        
         if (( DRIVER & PODMAN )); then
-            # Install Podman via apt (more stable on Ubuntu than snap)
-            sudo apt-get update
-            sudo apt-get install -y podman
+            if ! command -v podman  &> /dev/null; then
+                 # Install Podman via apt (more stable on Ubuntu than snap)
+                sudo apt-get update
+                sudo apt-get install -y podman
             
-            # If user still wants snap version, uncomment:
-            #sudo snap install --edge --devmode podman
-            #sudo snap connect circleci:docker podman
+                # If user still wants snap version, uncomment:
+                #sudo snap install --edge --devmode podman
+                #sudo snap connect circleci:docker podman
+            fi
         fi
-        
         printf "%s\n" "$(t 'install.done')"
 
         # Create registries configuration directories
