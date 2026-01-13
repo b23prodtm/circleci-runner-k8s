@@ -34,7 +34,6 @@ jobs:
     - image: cimg/base:2024.12
     steps:
       - checkout
-      
       - run:
           name: Install system dependencies (Ubuntu 24)
           command: |
@@ -49,95 +48,16 @@ jobs:
               git
       
       - run:
-          name: Install containerd
+          name: Install docker and mini k8s
           command: |
-            # Add Docker's official GPG key
-            sudo mkdir -p /etc/apt/keyrings
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-            
-            # Add Docker repository
-            echo \
-              "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-              $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-            
-            sudo apt-get update -y
-            sudo apt-get install -y containerd.io
-            
-            # Configure containerd
-            sudo mkdir -p /etc/containerd
-            sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
-            sudo systemctl restart containerd
-            
-            # Verify containerd
-            sudo systemctl status containerd
-            ctr --version
+            printf "1\n1\ny\n" | ./configure_ubuntu.sh
       
       - run:
-          name: Install docker rootless mode
+          name: Install helm and charts
           command: |
-            # Install docker-ce
-            sudo apt-get install -y docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin
-            
-            # Add current user to docker group (if not using rootless)
-            sudo usermod -aG docker $USER || true
-            
-            # Setup docker rootless (optional - for enhanced security)
-            # Note: In CircleCI, we run with sudo, so rootless is handled differently
-            docker --version
-      
-      - run:
-          name: Install kubectl (v1.32)
-          command: |
-            curl -fsSL https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl -o kubectl
-            chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
-            kubectl version --client
-      
-      - run:
-          name: Install helm
-          command: |
-            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-            helm version
-      
-      - run:
-          name: Install kind (Kubernetes in Docker) v0.20.0
-          command: |
-            curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
-            chmod +x ./kind
-            sudo mv kind /usr/local/bin/
-            kind --version
-      
-      - run:
-          name: Create kind cluster with containerd
-          command: |
-            cat > /tmp/kind-config.yaml \<<EOF
-            kind: Cluster
-            apiVersion: kind.x-k8s.io/v1alpha4
-            name: circleci-runner
-            nodes:
-            - role: control-plane
-              image: kindest/node:v1.32.0
-              extraMounts:
-              - hostPath: /var/run/docker.sock
-                containerPath: /var/run/docker.sock
-            containerdConfigPatches:
-            - |-
-              [plugins."io.containerd.grpc.v1.cri"]
-                systemd_cgroup = true
-            EOF
-            
-            kind create cluster --config /tmp/kind-config.yaml
-            kubectl cluster-info
-            kubectl get nodes
-            sleep 10
-      
-      - run:
-          name: Verify cluster and containerd
-          command: |
-            kubectl get nodes -o wide
-            kubectl get pods --all-namespaces
-            docker ps -a
-      
+            sed -i -e "s/(ENTER_YOUR_CIRCLECI_TOKEN_HERE)/$K8S_RUNNER_TOKEN/" \
+            -e "s#(MY-ORG/RESOURCE-CLASS)#$K8S_RUNNER_RESOURCE#" values.yaml
+            ./install.sh
       - run:
           name: "Install helm chart circle ci"
           command: |
@@ -182,4 +102,4 @@ jobs:
       - run:
           name: Cleanup kind cluster
           command: |
-            kind delete cluster --name circleci-runner || true
+            minikube delete -p sysbox || true
