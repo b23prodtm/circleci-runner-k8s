@@ -6,15 +6,16 @@ version: 2.1
 workflows:
   main:
     jobs:
-      - runner-job
-      - deploy-in-kind
+      - runner-job:
+          context: Info-b23prodtm
+      - deploy-in-kind:
+          context: Info-b23prodtm
 
 ###################
 # Job Definitions #
 ###################
 jobs:
   runner-job:
-    context: Info-b23prodtm
     resource_class: medium
     docker:
     - image: cimg/base:2024.12
@@ -28,7 +29,6 @@ jobs:
             printenv
   
   deploy-in-kind:
-    context: Info-b23prodtm
     resource_class: medium
     docker:
     - image: cimg/base:2024.12
