@@ -163,7 +163,7 @@ main() {
         printf "%s\n" ""
         printf "%s\n" "$(t 'install.dependencies')"
     	if ! command -v minikube &> /dev/null; then
-            dir="$(pwd)"; cd "/home/$USER"
+            dir="$(pwd)"; cd "$HOME"
     	    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
     	    chmod 0644 minikube-linux-amd64
     	    sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
@@ -184,7 +184,7 @@ main() {
     	fi
         if (( DRIVER & DOCKER )); then
             if ! command -v docker  &> /dev/null; then
-                dir="$(pwd)"; cd "/home/$USER"
+                dir="$(pwd)"; cd "$HOME"
                 curl -fsSL https://get.docker.com/rootless -o get-docker.sh
             	chmod 0755 get=docker.sh
              	./get-docker.sh
@@ -214,7 +214,7 @@ main() {
         "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
         | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
         printf "%s\n" "$(t 'install.containers_copied')"
-        cp -Rvf /etc/containers/registries.conf.d "/home/$USER/.config/containers/"
+        cp -Rvf /etc/containers/registries.conf.d "$HOME/.config/containers/"
     fi
 
     minikube -p sysbox stop || true
