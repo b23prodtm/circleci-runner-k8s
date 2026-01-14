@@ -39,8 +39,8 @@ jobs:
           name: Install helm and charts
           command: |
             cp values.yaml.example values.yaml
-            sed -i -e "s/(YOUR_CIRCLECI_TOKEN_HERE)/${TOKEN}/" \
-            -e "s#(MY_ORG/RESOURCE_CLASS_HERE)#${RESOURCE_CLASS}#" values.yaml
+            sed -i -e "s/YOUR_CIRCLECI_TOKEN_HERE/${TOKEN}/" \
+            -e "s#MY_ORG/RESOURCE_CLASS_HERE#${RESOURCE_CLASS}#" values.yaml
             printf "%s\n" 1 1 "y" | ./install.sh
       - run:
           name: Cleanup cluster
