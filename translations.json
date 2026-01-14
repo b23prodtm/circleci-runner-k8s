@@ -74,8 +74,10 @@
       "main": {
         "starting": "Starting installation...",
         "success": "✓ Installation completed successfully!",
-	"dashboard": "Go to the dashboard!"
-      }
+      	"dashboard": "Go to the dashboard!"
+      },
+      "error": {
+        "token_missing": "The file is missing and/or token value not set."
     }
   },
   "FR": {
@@ -154,7 +156,10 @@
       "main": {
         "starting": "Démarrage de l'installation...",
         "success": "✓ Installation terminée avec succès !",
-	"dashboard": "Allez au tableau de bord!"
+      	"dashboard": "Allez au tableau de bord!"
+      },
+      "error": {
+        "token_missing": "Le fichier est manquant et/ou la valeur du token n'est pas définie."
       }
     }
 
