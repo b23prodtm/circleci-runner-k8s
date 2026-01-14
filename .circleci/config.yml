@@ -21,8 +21,10 @@ jobs:
       #  command: ["--host=unix:///var/run/docker.sock"]
       - image: cimg/base:2024.12
         environment:
-          RUNNER_CLASS: K8S_RUNNER_RESOURCE
-          TOKEN: K8S_RUNNER_TOKEN
+          RUNNER_CLASS: $K8S_RUNNER_RESOURCE
+          TOKEN: $K8S_RUNNER_TOKEN
+          DOCKER_USER: $DOCKER_USER
+          DOCKER_PASS: $DOCKER_PASS
     steps:
       - checkout
       - run:
@@ -32,14 +34,14 @@ jobs:
       - run:
           name: Install podman and minikube
           command: |
-            printf "1\ny\n2\ny\n" | ./configure_ubuntu.sh
+            printf "%s\n" 1 "y" 2 "y" | ./configure_ubuntu.sh
       - run:
           name: Install helm and charts
           command: |
             cp values.yaml.example values.yaml
             sed -i -e "s/(YOUR_CIRCLECI_TOKEN_HERE)/${TOKEN}/" \
             -e "s#(MY_ORG/RESOURCE_CLASS_HERE)#${RESOURCE_CLASS}#" values.yaml
-            printf "1\n1\ny\n" | ./install.sh
+            printf "%s\n" 1 1 "y" | ./install.sh
       - run:
           name: Cleanup cluster
           command: |
