@@ -167,7 +167,7 @@ main() {
         sudo apt-get update
 	    if ! command -v minikube &> /dev/null; then
             sudo apt-get install curl
-            dir="$(pwd)"; cd "/home/$USER"
+            dir="$(pwd)"; cd "$HOME"
     	    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
     	    chmod 0644 minikube_latest_amd64.deb
     	    sudo dpkg -i minikube_latest_amd64.deb
@@ -194,7 +194,7 @@ main() {
         if (( DRIVER & DOCKER )); then
     	    if ! command -v docker  &> /dev/null; then
     	        sudo apt-get install -y curl
-                dir="$(pwd)"; cd "/home/$USER"
+                dir="$(pwd)"; cd "$HOME"
                 curl -fsSL https://get.docker.com/rootless -o get-docker.sh
         		chmod 0755 get-docker.sh
                 ./get-docker.sh
@@ -219,7 +219,7 @@ main() {
 
         # Create registries configuration directories
         sudo mkdir -p /etc/containers/registries.conf.d
-        mkdir -p "/home/$USER/.config/containers/registries.conf.d"
+        mkdir -p "$HOME/.config/containers/registries.conf.d"
         
         # Configure container registries
         printf "%s\n"  "[[registry]]" \
@@ -234,7 +234,7 @@ main() {
         | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
         
         printf "%s\n" "Copied to the user containers path..."
-        cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
+        cp -Rvf /etc/containers/registries.conf.d $HOME/.config/containers/
     fi
 
     minikube -p sysbox stop || true
