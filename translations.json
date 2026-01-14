@@ -1,4 +1,18 @@
 {
+  "en": { 
+    "install": "Installing...", 
+    "ok": "OK",
+    "warn": "Warning", 
+    "err": "Error", 
+    "relogin": "You may need to re-login for group changes to take effect." 
+  },
+  "fr": { 
+    "install": "Installation en cours...", 
+    "ok": "OK", 
+    "warn": "Attention", 
+    "err": "Erreur", 
+    "relogin": "Vous devrez peut-être vous reconnecter pour appliquer les changements de groupe." 
+  },
   "EN": {
     "menu": {
       "title": "Minikube Configuration"
