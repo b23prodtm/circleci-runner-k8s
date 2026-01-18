@@ -181,20 +181,26 @@ main() {
     kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
     printf "%s\n" "$(t 'installation.steps.done')"
 
+    # Container runner installation
+    printf "%s\n" ""
+    printf "%s\n" "$(t 'installation.steps.container_runner')"
+    helm uninstall container-agent -n circleci || true
+    kubectl delete namespace circleci || true
+    helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
+    helm repo update
+    kubectl create namespace circleci
+    helm install container-agent container-agent/container-agent -n circleci -f "$VALUES_FILE"
+    printf "%s\n" "$(t 'installation.steps.done')"
+
     sleep 1
     printf "%s\n" ""
-    printf "%s\n" "$(t 'installation.steps.ssh_enable')"
-    printf "%s\n" "$(t 'installation.steps.envoy_version') $HELM_VERSION"
-
-    if (( GATEWAY_INSTALL & NO_GATEWAY_INSTALL )); then
-	helm uninstall eg -n envoy-gateway-system|| true
-	kubectl delete namespace envoy-gateway-system || true
-    elif (( GATEWAY_INSTALL & HELM_INSTALL )); then
-        printf "%s\n" "$(t 'installation.steps.helm_install')"
+    if (( GATEWAY_INSTALL & HELM_INSTALL )); then
+	printf "%s\n" "$(t 'installation.steps.helm_install')"
         helm install eg oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" -n envoy-gateway-system --create-namespace
         kubectl wait --timeout=5m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
         kubectl apply -f https://github.com/envoyproxy/gateway/releases/download/latest/quickstart.yaml -n default
-    elif (( GATEWAY_INSTALL & KUBERNETES_INSTALL )); then
+    fi
+    if (( GATEWAY_INSTALL & KUBERNETES_INSTALL )); then
         printf "%s\n" "$(t 'installation.steps.kubernetes_install')"
         kubectl apply --force-conflicts --server-side -f https://github.com/envoyproxy/gateway/releases/download/latest/install.yaml
         printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
@@ -208,22 +214,18 @@ main() {
     printf "%s\n" "$(t 'installation.steps.done')"
 
     sleep 1
-    printf "%s\n" "$(t 'installation.steps.redeploy')"
-    helm upgrade --wait --timeout=5m eg container-agent/container-agent -n envoy-gateway-system -f "$VALUES_FILE"
-    kubectl wait eg --timeout=5m --all --for=condition=Programmed -n envoy-gateway-system
-    printf "%s\n" "$(t 'installation.steps.done')"
+    if (( GATEWAY_INSTALL & NO_GATEWAY_INSTALL )); then
+	helm uninstall eg -n envoy-gateway-system|| true
+	kubectl delete namespace envoy-gateway-system || true
+    else
+        printf "%s\n" "$(t 'installation.steps.ssh_enable')"
+	printf "%s\n" "$(t 'installation.steps.envoy_version') $HELM_VERSION"
+        printf "%s\n" "$(t 'installation.steps.redeploy')"
+	helm upgrade --wait --timeout=5m eg container-agent/container-agent -n envoy-gateway-system -f "$VALUES_FILE"
+        kubectl wait eg --timeout=5m --all --for=condition=Programmed -n envoy-gateway-system
+        printf "%s\n" "$(t 'installation.steps.done')"
+    fi
     
-    # Container runner installation
-    printf "%s\n" ""
-    printf "%s\n" "$(t 'installation.steps.container_runner')"
-    helm uninstall container-agent -n circleci || true
-    kubectl delete namespace circleci || true
-    helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
-    helm repo update
-    kubectl create namespace circleci
-    helm install container-agent container-agent/container-agent -n circleci -f "$VALUES_FILE"
-    printf "%s\n" "$(t 'installation.steps.done')"
-
     echo ""
     echo "$(t 'installation.main.success')"
     echo "$(t 'installation.main.dashboard')"
