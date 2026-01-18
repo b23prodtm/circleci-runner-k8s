@@ -40,7 +40,7 @@ agent:
       spec:
         runtimeClassName: sysbox-runc
   ssh:
-    enabled: true
+    enabled: false
 
 imagePullSecrets: []
 nameOverride: ""
