@@ -239,17 +239,22 @@ main() {
 
     minikube -p sysbox stop || true
     minikube -p sysbox delete || true
+    minikube stop || true
+    minikube delete || true
     
     if (( DRIVER & PODMAN )); then
 	minikube config set rootless true
         minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
+        minikube start --driver=podman --container-runtime=cri-o --kubernetes-version="$KUBEV"
     fi
     
     if (( DRIVER & DOCKER )); then
         minikube start --driver=docker --container-runtime=containerd -p sysbox --kubernetes-version="$KUBEV"
+        minikube start --driver=docker --container-runtime=containerd --kubernetes-version="$KUBEV"
     fi
     
     minikube -p sysbox addons enable metrics-server
+    minikube addons enable metrics-server
     minikube profile list
     
     echo ""
