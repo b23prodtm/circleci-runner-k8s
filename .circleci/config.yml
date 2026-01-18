@@ -16,9 +16,8 @@ jobs:
   runner-test:
     resource_class: b23prodtm/linux
     docker:
-      - image: nestybox/ubuntu-noble-systemd-docker
-        entrypoint: ["dockerd"]
-        command: ["--host=unix:///var/run/docker.sock"]
+      - image: registry.nestybox.com/nestybox/ubuntu-noble-systemd-docker
+        entrypoint: ["/sbin/init"]
       #- image: cimg/base:2024.12
         environment:
           RUNNER_CLASS: $K8S_RUNNER_RESOURCE
