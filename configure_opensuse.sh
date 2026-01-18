@@ -162,41 +162,45 @@ main() {
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
         printf "%s\n" "$(t 'install.dependencies')"
-	if ! command -v minikube &> /dev/null; then
-            dir="$(pwd)"; cd "/home/$USER"
-	    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-	    chmod 0644 minikube-linux-amd64
-	    sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
-	    cd "$dir"
- 	fi
-	if ! command -v snap &> /dev/null; then
+    	if ! command -v minikube &> /dev/null; then
+            dir="$(pwd)"; cd "$HOME"
+    	    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+    	    chmod 0644 minikube-linux-amd64
+    	    sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+    	    cd "$dir"
+     	fi
+    	if ! command -v snap &> /dev/null; then
             sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
             sudo zypper --gpg-auto-import-keys refresh
             sudo zypper dup --from snappy
             sudo zypper install snapd
             sudo systemctl enable --now snapd
             sudo systemctl enable --now snapd.apparmor
-	fi
+    	fi
         sudo snap install circleci
-	sudo snap install helm --classic
+    	sudo snap install helm --classic
         if ! command -v kubectl &> /dev/null; then
-	    alias kubectl="minikube kubectl --"
-	fi
+    	    alias kubectl="minikube kubectl --"
+    	fi
         if (( DRIVER & DOCKER )); then
-           sudo snap remove docker
             if ! command -v docker  &> /dev/null; then
-                dir="$(pwd)"; cd "/home/$USER"
-	        curl -fsSL https://get.docker.com/rootless -o get-docker.sh
-		chmod 0755 get=docker.sh
- 		./get-docker.sh
-		cd "$dir"
+                dir="$(pwd)"; cd "$HOME"
+                curl -fsSL https://get.docker.com/rootless -o get-docker.sh
+            	chmod 0755 get=docker.sh
+             	./get-docker.sh
+            	cd "$dir"
+                # If user still wants snap version, uncomment:
+                #snap install docker
+                #sudo snap connect circleci:docker docker
             fi
-            snap install docker
-            sudo snap connect circleci:docker docker
         fi
         if (( DRIVER & PODMAN )); then
-            snap install --edge --devmode podman
-            sudo snap connect circleci:docker podman
+            if ! command -v podman  &> /dev/null; then
+                sudo zypper install podman
+                # If user still wants snap version, uncomment:
+                #snap install --edge --devmode podman
+                #sudo snap connect circleci:docker podman
+            fi
         fi
         printf "%s\n" "$(t 'install.done')"
 
@@ -210,7 +214,7 @@ main() {
         "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
         | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
         printf "%s\n" "$(t 'install.containers_copied')"
-        cp -Rvf /etc/containers/registries.conf.d "/home/$USER/.config/containers/"
+        cp -Rvf /etc/containers/registries.conf.d "$HOME/.config/containers/"
     fi
 
     minikube -p sysbox stop || true
