@@ -171,10 +171,6 @@ main() {
     echo "$(t 'installation.main.starting')"
     echo ""
 
-    if ! command -v kubectl &> /dev/null; then
-        sudo snap install kubectl --classic
-    fi
-
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"
     kubectl label nodes sysbox sysbox-install=yes
@@ -229,7 +225,7 @@ main() {
     echo ""
     echo "$(t 'installation.main.success')"
     echo "$(t 'installation.main.dashboard')"
-    printf "%s\n" "minikube dashboard"
+    printf "%s\n" "minikube -p sysbox dashboard"
 }
 
 # Start the script

@@ -2,7 +2,8 @@
 
 PODMAN=0x10
 DOCKER=0x01
-KUBEV="v1.32.11"
+KUBERNETES_VERSION="v1.32"
+CRIO_VERSION="v1.32"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -164,9 +165,8 @@ main() {
         printf "%s\n" "$(t 'install.dependencies')"
         
         # Update package list
-        sudo apt-get update
 	if ! command -v minikube &> /dev/null; then
-            sudo apt-get install curl
+	    sudo apt-get install -y curl
 	    dir="$(pwd)"; cd "/home/$USER"
 	    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
 	    chmod 0644 minikube_latest_amd64.deb
@@ -174,7 +174,32 @@ main() {
 	    rm minikube_latest_amd64.deb
 	    cd "$dir"
 	fi
+	# Install CRI-O (needed by sysbox)
+	if ! command -v crio &> /dev/null; then
+	    dir="$(pwd)"; cd "/home/$USER"
+	    curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key |
+	    sudo gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+	    echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/ /" |
+    	    sudo tee /etc/apt/sources.list.d/cri-o.list
+	    rm Release.key
+	    cd "$dir"
+            sudo apt-get update
+            sudo apt-get install -y cri-o
+	    sudo systemctl start crio.service
+	fi
+	# Install Kubernetes for CRI-O
+	if ! command -v kubectl &> /dev/null; then
+	    dir="$(pwd)"; cd "/home/$USER"
+	    curl -fsSL https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key |
+            sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
+            echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" |
+            sudo tee /etc/apt/sources.list.d/kubernetes.list
+	    rm Release.key
+	    cd "$dir"
+            sudo apt-get update
+            sudo apt-get install -y kubectl
+	fi
         # Install snapd if not already installed
         if ! command -v snap &> /dev/null; then
             sudo apt-get install -y snapd
@@ -187,18 +212,16 @@ main() {
         # Install CircleCI CLI, helm
         sudo snap install circleci
 	sudo snap install helm --classic
-        if ! command -v kubectl &> /dev/null; then
-	    alias kubectl="minikube kubectl --"
-	fi
         
         if (( DRIVER & DOCKER )); then
 	    sudo snap remove docker
 	    if ! command -v docker  &> /dev/null; then
-	        sudo apt-get install curl
+	        sudo apt-get install -y curl
     	        dir="$(pwd)"; cd "/home/$USER"
                 curl -fsSL https://get.docker.com/rootless -o get-docker.sh
 		chmod 0755 get-docker.sh
                 ./get-docker.sh
+	        rm get-docker.sh
 		cd "$dir"
             fi
             # Install Docker via snap
@@ -242,11 +265,11 @@ main() {
     
     if (( DRIVER & PODMAN )); then
 	minikube config set rootless true
-        minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
+        minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBERNETES_VERSION"
     fi
     
     if (( DRIVER & DOCKER )); then
-        minikube start --driver=docker --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
+        minikube start --driver=docker --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBERNETES_VERSION"
     fi
     
     minikube -p sysbox addons enable metrics-server
