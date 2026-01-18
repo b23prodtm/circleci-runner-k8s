@@ -16,9 +16,9 @@ jobs:
   runner-test:
     resource_class: b23prodtm/linux
     docker:
-      - image: registry.nestybox.com/nestybox/ubuntu-noble-systemd-docker
-        entrypoint: ["/sbin/init"]
-      #- image: cimg/base:2024.12
+      #- image: registry.nestybox.com/nestybox/ubuntu-noble-systemd-docker
+      #  entrypoint: ["/sbin/init"]
+      - image: cimg/base:2024.12
         environment:
           RUNNER_CLASS: $K8S_RUNNER_RESOURCE
           TOKEN: $K8S_RUNNER_TOKEN
@@ -31,7 +31,7 @@ jobs:
           command: |
             printenv
       - run:
-          name: Install docker and minikube
+          name: Install podman and minikube
           command: |
             printf "%s\n" 1 "y" 2 "y" | ./configure_ubuntu.sh
       - run:
