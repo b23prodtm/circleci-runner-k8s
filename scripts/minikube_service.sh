@@ -61,7 +61,7 @@ Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 Environment="HOME=%h"
 
 # Start minikube with sysbox profile
-ExecStart=/bin/bash -c 'minikube start -p sysbox && sleep 5 && minikube dashboard -p sysbox &'
+ExecStart=/bin/bash -c 'minikube start -p sysbox && sleep 5 && minikube dashboard -p sysbox'
 
 # Stop minikube gracefully
 ExecStop=/usr/bin/minikube stop -p sysbox
