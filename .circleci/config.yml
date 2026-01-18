@@ -14,12 +14,12 @@ workflows:
 ###################
 jobs:
   runner-test:
-    resource_class: medium
+    resource_class: b23prodtm/linux
     docker:
-      #- image: nestybox/ubuntu-noble-systemd-docker
-      #  entrypoint: ["dockerd"]
-      #  command: ["--host=unix:///var/run/docker.sock"]
-      - image: cimg/base:2024.12
+      - image: nestybox/ubuntu-noble-systemd-docker
+        entrypoint: ["dockerd"]
+        command: ["--host=unix:///var/run/docker.sock"]
+      #- image: cimg/base:2024.12
         environment:
           RUNNER_CLASS: $K8S_RUNNER_RESOURCE
           TOKEN: $K8S_RUNNER_TOKEN
@@ -32,7 +32,7 @@ jobs:
           command: |
             printenv
       - run:
-          name: Install podman and minikube
+          name: Install docker and minikube
           command: |
             printf "%s\n" 1 "y" 2 "y" | ./configure_ubuntu.sh
       - run:
