@@ -200,6 +200,10 @@ main() {
             sudo apt-get update
             sudo apt-get install -y kubectl
 	fi
+	# Install crictl
+	if ! command -v crictl &> /dev/null; then
+	    sudo apt-get install -y kubeadm kubelet
+	fi
         # Install snapd if not already installed
         if ! command -v snap &> /dev/null; then
             sudo apt-get install -y snapd
