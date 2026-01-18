@@ -30,7 +30,7 @@
     },
     "driver": {
       "question": "Which driver would you like to use?",
-      "podman": "Podman",
+      "podman": "Podman (experimental)",
       "docker": "Docker",
       "prompt": "Your choice (1 or 2):",
       "podman_selected": "✓ Podman driver selected",
@@ -112,7 +112,7 @@
     },
     "driver": {
       "question": "Quel driver souhaitez-vous utiliser ?",
-      "podman": "Podman",
+      "podman": "Podman (expérimental)",
       "docker": "Docker",
       "prompt": "Votre choix (1 ou 2) :",
       "podman_selected": "✓ Driver Podman sélectionné",
