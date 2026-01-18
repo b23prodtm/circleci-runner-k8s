@@ -146,6 +146,29 @@ confirm_choices() {
     done
 }
 
+create_registries() {
+    reg_file="/etc/containers/registries.conf.d/crio.conf"
+    if [ ! -z "$1" ]; then reg_file="$1"; fi
+    # Create registries configuration directories
+    sudo mkdir -p "$(dirname $reg_file)"
+
+    # Configure container registries, crio.conf (CRI-O only)
+    printf "%s\n"  "unqualified-search-registries = [\"docker.io\"]" \
+    | sudo tee "$reg_file"
+    printf "%s\n"  "[[registry]]" \
+    "  # DockerHub" \
+    "  location = \"docker.io\"" \
+    | sudo tee -a "$reg_file"
+    
+    printf "%s\n"  "[aliases]" \
+    "  # CircleCI" \
+    "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
+    "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
+    | sudo tee -a "$reg_file"
+    
+    mkdir -p "/home/$USER/.config/containers/"
+    cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
+}
 # Main script execution
 main() {
     load_translations
@@ -242,28 +265,8 @@ main() {
             # sudo snap connect circleci:docker podman
         fi
         
+	create_registries /etc/containers/registries.conf
         printf "%s\n" "$(t 'install.done')"
-
-        # Create registries configuration directories
-        sudo mkdir -p /etc/containers/registries.conf.d
-        mkdir -p "/home/$USER/.config/containers/registries.conf.d"
-        
-        # Configure container registries, crio.conf (CRI-O only)
-        printf "%s\n"  "unqualified-search-registries = [\"docker.io\"]" \
-        | sudo tee /etc/containers/registries.conf.d/crio.conf
-        printf "%s\n"  "[[registry]]" \
-        "  # DockerHub" \
-        "  location = \"docker.io\"" \
-        | sudo tee -a /etc/containers/registries.conf.d/crio.conf
-        
-        printf "%s\n"  "[aliases]" \
-        "  # CircleCI" \
-        "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
-        "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
-        | sudo tee -a /etc/containers/registries.conf.d/crio.conf
-        
-        printf "%s\n" "Copied to the user containers path..."
-        cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
     fi
 
     minikube -p sysbox stop || true
