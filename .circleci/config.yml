@@ -33,14 +33,14 @@ jobs:
       - run:
           name: Install podman and minikube
           command: |
-            printf "%s\n" 1 "y" 2 "y" | ./configure_ubuntu.sh
+            ./configure_podman.sh
       - run:
           name: Install helm and charts
           command: |
             cp values.yaml.example values.yaml
             sed -i -e "s/YOUR_CIRCLECI_TOKEN_HERE/${TOKEN}/" \
             -e "s#MY_ORG/RESOURCE_CLASS_HERE#${RESOURCE_CLASS}#" values.yaml
-            printf "%s\n" 1 1 "y" | ./install.sh
+            ./install_ssh_gateway.sh
       - run:
           name: Cleanup cluster
           command: |
