@@ -14,7 +14,7 @@ workflows:
 ###################
 jobs:
   runner-test:
-    #resource_class: b23prodtm/linux
+    resource_class: b23prodtm/linux
     docker:
       - image: registry.nestybox.com/nestybox/ubuntu-noble-systemd-docker
         entrypoint: ["/sbin/init"]
