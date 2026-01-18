@@ -144,11 +144,13 @@
         "question": "Quelle méthode d'installation pour Envoy Gateway ?",
         "helm": "Helm",
         "kubernetes": "Kubernetes (recommandé)",
+        "none": "ne pas installer/désinstaller",
         "upgrade": "Mettre à jour une installation existante",
         "prompt": "Votre choix (1, 2 ou 3) :",
         "helm_selected": "✓ Méthode d'installation Helm sélectionnée",
         "kubernetes_selected": "✓ Méthode d'installation Kubernetes sélectionnée",
         "upgrade_selected": "✓ Méthode de mise à jour sélectionnée",
+        "none_selected": "✓ Aucune/désinstallation selectionnée",
         "invalid": "Veuillez choisir 1, 2 ou 3"
       },
       "confirm": {
