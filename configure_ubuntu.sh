@@ -210,7 +210,6 @@ main() {
             # Install Podman via apt (more stable on Ubuntu than snap)
             sudo apt-get update
             sudo apt-get install -y podman
-            
             # If user still wants snap version, uncomment:
             # sudo snap install --edge --devmode podman
             # sudo snap connect circleci:docker podman
@@ -242,6 +241,7 @@ main() {
     minikube -p sysbox delete || true
     
     if (( DRIVER & PODMAN )); then
+	minikube config set rootless true
         minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
     fi
     

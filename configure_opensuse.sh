@@ -217,6 +217,7 @@ main() {
     minikube -p sysbox delete || true
     
     if (( DRIVER & PODMAN )); then
+	minikube config set rootless true
         minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
     fi
     
