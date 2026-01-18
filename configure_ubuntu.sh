@@ -248,17 +248,19 @@ main() {
         sudo mkdir -p /etc/containers/registries.conf.d
         mkdir -p "/home/$USER/.config/containers/registries.conf.d"
         
-        # Configure container registries
+        # Configure container registries, crio.conf (CRI-O only)
+        printf "%s\n"  "unqualified-search-registries = [\"docker.io\"]" \
+        | sudo tee /etc/containers/registries.conf.d/crio.conf
         printf "%s\n"  "[[registry]]" \
         "  # DockerHub" \
         "  location = \"docker.io\"" \
-        | sudo tee /etc/containers/registries.conf.d/k8s-registries.conf
+        | sudo tee -a /etc/containers/registries.conf.d/crio.conf
         
         printf "%s\n"  "[aliases]" \
         "  # CircleCI" \
         "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
         "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
-        | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
+        | sudo tee -a /etc/containers/registries.conf.d/crio.conf
         
         printf "%s\n" "Copied to the user containers path..."
         cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
