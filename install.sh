@@ -3,7 +3,7 @@
 HELM_VERSION="v1.6.1"
 HELM_INSTALL=0x1
 KUBERNETES_INSTALL=0x10
-HELM_UPGRADE=0x100
+NO_GATEWAY_INSTALL=0x100
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -99,7 +99,7 @@ ask_gateway_method() {
         echo "$(t 'installation.gateway.question')"
         echo "  1) $(t 'installation.gateway.kubernetes')"
         echo "  2) $(t 'installation.gateway.helm')"
-        echo "  3) $(t 'installation.gateway.upgrade')"
+        echo "  3) $(t 'installation.gateway.none')"
         read -p "$(t 'installation.gateway.prompt') " choix
         case $choix in
             1 )
@@ -113,8 +113,8 @@ ask_gateway_method() {
                 break
                 ;;
             3 )
-                GATEWAY_INSTALL=$HELM_UPGRADE
-                echo "$(t 'installation.gateway.upgrade_selected')"
+                GATEWAY_INSTALL=$NO_GATEWAY_INSTALL
+                echo "$(t 'installation.gateway.none_selected')"
                 break
                 ;;
             * )
@@ -137,7 +137,7 @@ confirm_choices() {
     elif (( GATEWAY_INSTALL == KUBERNETES_INSTALL )); then
         echo "$(t 'installation.confirm.method') $(t 'installation.gateway.kubernetes')"
     else
-        echo "$(t 'installation.confirm.method') $(t 'installation.gateway.upgrade')"
+        echo "$(t 'installation.confirm.method') $(t 'installation.gateway.none')"
     fi
     echo "========================================"
     echo ""
@@ -185,28 +185,23 @@ main() {
     printf "%s\n" ""
     printf "%s\n" "$(t 'installation.steps.ssh_enable')"
     printf "%s\n" "$(t 'installation.steps.envoy_version') $HELM_VERSION"
-    helm uninstall eg -n envoy-gateway-system|| true
-    kubectl delete namespace envoy-gateway-system || true
 
-    if (( GATEWAY_INSTALL & HELM_INSTALL )); then
+    if (( GATEWAY_INSTALL & NO_GATEWAY_INSTALL )); then
+	helm uninstall eg -n envoy-gateway-system|| true
+	kubectl delete namespace envoy-gateway-system || true
+    elif (( GATEWAY_INSTALL & HELM_INSTALL )); then
         printf "%s\n" "$(t 'installation.steps.helm_install')"
         helm install eg oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" -n envoy-gateway-system --create-namespace
         kubectl wait --timeout=5m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
         kubectl apply -f https://github.com/envoyproxy/gateway/releases/download/latest/quickstart.yaml -n default
-    fi
-    
-    if (( GATEWAY_INSTALL & KUBERNETES_INSTALL )); then
+    elif (( GATEWAY_INSTALL & KUBERNETES_INSTALL )); then
         printf "%s\n" "$(t 'installation.steps.kubernetes_install')"
         kubectl apply --force-conflicts --server-side -f https://github.com/envoyproxy/gateway/releases/download/latest/install.yaml
-    fi
-    
-    if (( GATEWAY_INSTALL & HELM_UPGRADE )); then  
         printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
         dir="$(pwd)"; cd  "/home/$USER"
         helm pull oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" --untar
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/gatewayapi-crds.yaml
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/generated
-        helm upgrade eg oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" -n envoy-gateway-system
         rm -Rfv ./gateway-helm
 	cd "$dir"
     fi

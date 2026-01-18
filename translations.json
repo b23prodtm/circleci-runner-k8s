@@ -59,10 +59,12 @@
         "question": "Which installation method for Envoy Gateway?",
         "helm": "Helm",
         "kubernetes": "Kubernetes (recommended)",
+        "none": "don't install/uninstall",
         "upgrade": "Upgrade existing installation",
         "prompt": "Your choice (1, 2 or 3):",
         "helm_selected": "✓ Helm installation method selected",
         "kubernetes_selected": "✓ Kubernetes installation method selected",
+        "none_selected": "✓ None/Uninstall selected",
         "upgrade_selected": "✓ Upgrade method selected",
         "invalid": "Please choose 1, 2 or 3"
       },
