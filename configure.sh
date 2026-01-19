@@ -147,13 +147,13 @@ confirm_choices() {
 }
 
 create_registries() {
-    reg_file="/etc/containers/registries.conf.d/crio.conf"
-    if [ ! -z "$1" ]; then reg_file="$1"; fi
+    reg_file=""
+    if [ ! -z "$1" ]; then reg_file="$1"; else echo "Usage: $0 file.conf"; exit 0; fi
     # Create registries configuration directories
     sudo mkdir -p "$(dirname $reg_file)"
 
     # Configure container registries, crio.conf (CRI-O only)
-    printf "%s\n"  "unqualified-search-registries = [\"docker.io\"]" \
+    printf "%s\n"  "unqualified-search-registries = [\"docker.io\",\"quay.io\"]" \
     | sudo tee "$reg_file"
     printf "%s\n"  "[[registry]]" \
     "  # DockerHub" \
@@ -166,9 +166,6 @@ create_registries() {
     "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
     "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
     | sudo tee -a "$reg_file"
-    
-    mkdir -p "/home/$USER/.config/containers/"
-    cp -Rvf "$reg_file" "/home/$USER/.config/containers/."
 }
 # Main script execution
 main() {
@@ -201,7 +198,7 @@ main() {
 	# Install CRI-O (needed by sysbox)
 	if ! command -v crio &> /dev/null; then
 	    dir="$(pwd)"; cd "/home/$USER"
-	    curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key |
+	    curl -fsSL "https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key" |
 	    sudo gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
 	    echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/ /" |
     	    sudo tee /etc/apt/sources.list.d/cri-o.list
@@ -214,7 +211,7 @@ main() {
 	# Install Kubernetes for CRI-O
 	if ! command -v kubectl &> /dev/null; then
 	    dir="$(pwd)"; cd "/home/$USER"
-	    curl -fsSL https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key |
+	    curl -fsSL "https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key" |
             sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
             echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" |
@@ -266,7 +263,6 @@ main() {
             # sudo snap connect circleci:docker podman
         fi
         
-	create_registries /etc/containers/registries.conf
         printf "%s\n" "$(t 'install.done')"
     fi
 
@@ -284,6 +280,8 @@ main() {
     fi
     
     minikube -p sysbox addons enable metrics-server
+    create_registries "/home/$USER/.config/containers/registries.conf"
+    cat registries.conf | minikube -p sysbox ssh -- sudo tee /etc/containers/registries.conf
     minikube profile list
     
     echo ""
