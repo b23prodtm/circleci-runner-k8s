@@ -7,7 +7,8 @@ CRIO_VERSION="v1.32"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
-
+REGISTRIES_FILE="/home/$USER/.config/containers/registries.conf"
+REGISTRIES_ALIASES_FILE="/home/$USER/.config/containers/registries.conf.d/shortnames.conf"
 # Load translations from JSON file
 load_translations() {
     if [[ ! -f "$TRANSLATIONS_FILE" ]]; then
@@ -276,8 +277,8 @@ main() {
             # sudo snap connect circleci:docker podman
         fi
         
-        create_registries "/home/$USER/.config/containers/registries.conf"
-        add_registries_aliases "/home/$USER/.config/containers/registries.conf.d/shortnames.conf"
+        add_registries "$REGISTRIES_FILE"
+        add_registries_aliases "$REGISTRIES_ALIASES_FILE"
         printf "%s\n" "$(t 'install.done')"
     fi
 
@@ -295,8 +296,8 @@ main() {
     fi
     
     minikube -p sysbox addons enable metrics-server
-    cat "/home/$USER/.config/containers/registries.conf" && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf
-    cat "/home/$USER/.config/containers/registries.conf.d/shortnames.conf" && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf.d/shortnames.conf
+    cat "$REGISTRIES_FILE" && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf
+    cat "$REGISTRIES_ALIASES_FILE" && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf.d/shortnames.conf
     minikube profile list
     
     echo ""
