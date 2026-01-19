@@ -281,7 +281,7 @@ main() {
     
     minikube -p sysbox addons enable metrics-server
     create_registries "/home/$USER/.config/containers/registries.conf"
-    cat registries.conf | minikube -p sysbox ssh -- sudo tee /etc/containers/registries.conf
+    cat registries.conf && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf
     minikube profile list
     
     echo ""
