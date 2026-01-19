@@ -168,7 +168,7 @@ create_registries() {
     | sudo tee -a "$reg_file"
     
     mkdir -p "/home/$USER/.config/containers/"
-    cp -Rvf /etc/containers/registries.conf.d /home/$USER/.config/containers/
+    cp -Rvf "$reg_file" "/home/$USER/.config/containers/."
 }
 # Main script execution
 main() {
