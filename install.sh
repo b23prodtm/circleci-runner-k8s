@@ -174,7 +174,7 @@ main() {
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"
     kubectl label nodes sysbox sysbox-install=yes
-    kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
+    kubectl apply -f https://raw.githubusercontent.com/b23prodtm/sysbox/refs/heads/patch-1/sysbox-k8s-manifests/sysbox-install.yaml
     printf "%s\n" "$(t 'installation.steps.done')"
 
     # Container runner installation

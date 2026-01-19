@@ -162,6 +162,7 @@ create_registries() {
     
     printf "%s\n"  "[aliases]" \
     "  # CircleCI" \
+    "  \"bprtkop/sysbox-deploy-k8s\" = \"docker.io/bprtkop/sysbox-deploy-k8s\"" \
     "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
     "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
     | sudo tee -a "$reg_file"
