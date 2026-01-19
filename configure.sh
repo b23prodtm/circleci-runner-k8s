@@ -146,27 +146,40 @@ confirm_choices() {
     done
 }
 
-create_registries() {
+create_reg_file() {
     reg_file=""
     if [ ! -z "$1" ]; then reg_file="$1"; else echo "Usage: $0 file.conf"; exit 0; fi
     # Create registries configuration directories
     sudo mkdir -p "$(dirname $reg_file)"
-
+    touch "$reg_file"
+    echo "$reg_file"
+}
+add_registries() {
+    reg_file="$(create_reg_file "$*")"
     # Configure container registries, crio.conf (CRI-O only)
     printf "%s\n"  "unqualified-search-registries = [\"docker.io\",\"quay.io\"]" \
-    | sudo tee "$reg_file"
+    | sudo tee -a "$reg_file"
     printf "%s\n"  "[[registry]]" \
     "  # DockerHub" \
     "  location = \"docker.io\"" \
+    "  # Quay" \
+    "  location = \"quay.io\"" \
     | sudo tee -a "$reg_file"
-    
-    printf "%s\n"  "[aliases]" \
+}
+
+add_registries_aliases() {
+    reg_file="$(create_reg_file "$*")"
+    if ! cat "$reg_file" | grep "aliases" &> /dev/null; then
+        printf "%s\n" "[aliases]"
+    fi
+    printf "%s\n" \
     "  # CircleCI" \
     "  \"bprtkop/sysbox-deploy-k8s\" = \"docker.io/bprtkop/sysbox-deploy-k8s\"" \
     "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
     "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
     | sudo tee -a "$reg_file"
 }
+
 # Main script execution
 main() {
     load_translations
@@ -263,6 +276,8 @@ main() {
             # sudo snap connect circleci:docker podman
         fi
         
+        create_registries "/home/$USER/.config/containers/registries.conf"
+        add_registries_aliases "/home/$USER/.config/containers/registries.conf.d/shortnames.conf"
         printf "%s\n" "$(t 'install.done')"
     fi
 
@@ -280,8 +295,8 @@ main() {
     fi
     
     minikube -p sysbox addons enable metrics-server
-    create_registries "/home/$USER/.config/containers/registries.conf"
-    cat registries.conf && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf
+    cat "/home/$USER/.config/containers/registries.conf" && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf
+    cat "/home/$USER/.config/containers/registries.conf.d/shortnames.conf" && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf.d/shortnames.conf
     minikube profile list
     
     echo ""
