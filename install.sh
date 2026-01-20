@@ -224,11 +224,11 @@ main() {
     fi
     
     echo ""
-    echo "$(t 'installation.main.success')"
-    echo "$(t 'installation.main.dashboard')"
     minikube -p sysbox addons enable headlamp
     kubectl create token headlamp --duration 24h -n headlamp
-    printf "%s\n" "minikube -p sysbox service headlamp -n headlamp"
+    echo "$(t 'installation.main.success')"
+    echo "$(t 'installation.main.dashboard')"
+    printf "%s\n" "            minikube -p sysbox service headlamp -n headlamp"
 }
 
 # Start the script
