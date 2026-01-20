@@ -269,6 +269,7 @@ main() {
     minikube -p sysbox addons enable metrics-server
     minikube -p sysbox cp "$REGISTRIES_FILE" "/etc/containers/$REGISTRIES_FILE"
     minikube -p sysbox cp "$REGISTRIES_ALIASES_FILE" "/etc/containers/$REGISTRIES_ALIASES_FILE"
+    minikube -p sysbox start
     minikube profile list
     
     echo ""
