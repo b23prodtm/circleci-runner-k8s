@@ -7,8 +7,9 @@ CRIO_VERSION="v1.32"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
-REGISTRIES_FILE="/home/$USER/.config/containers/registries.conf"
-REGISTRIES_ALIASES_FILE="/home/$USER/.config/containers/registries.conf.d/shortnames.conf"
+REGISTRY_DIR="/home/$USER/.config/containers"
+REGISTRIES_FILE="registries.conf"
+REGISTRIES_ALIASES_FILE="registries.conf.d/shortnames.conf"
 # Load translations from JSON file
 load_translations() {
     if [[ ! -f "$TRANSLATIONS_FILE" ]]; then
@@ -147,40 +148,6 @@ confirm_choices() {
     done
 }
 
-create_reg_file() {
-    reg_file=""
-    if [ ! -z "$1" ]; then reg_file="$1"; else echo "Usage: $0 file.conf"; exit 0; fi
-    # Create registries configuration directories
-    sudo mkdir -p "$(dirname $reg_file)"
-    touch "$reg_file"
-    echo "$reg_file"
-}
-add_registries() {
-    reg_file="$(create_reg_file "$*")"
-    # Configure container registries, crio.conf (CRI-O only)
-    printf "%s\n"  "unqualified-search-registries = [\"docker.io\",\"quay.io\"]" \
-    | sudo tee -a "$reg_file"
-    printf "%s\n"  "[[registry]]" \
-    "  # DockerHub" \
-    "  location = \"docker.io\"" \
-    "  # Quay" \
-    "  location = \"quay.io\"" \
-    | sudo tee -a "$reg_file"
-}
-
-add_registries_aliases() {
-    reg_file="$(create_reg_file "$*")"
-    if ! cat "$reg_file" | grep "aliases" &> /dev/null; then
-        printf "%s\n" "[aliases]"
-    fi
-    printf "%s\n" \
-    "  # CircleCI" \
-    "  \"bprtkop/sysbox-deploy-k8s\" = \"docker.io/bprtkop/sysbox-deploy-k8s\"" \
-    "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
-    "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
-    | sudo tee -a "$reg_file"
-}
-
 # Main script execution
 main() {
     load_translations
@@ -251,6 +218,12 @@ main() {
         # Install CircleCI CLI, helm
         sudo snap install circleci
 	sudo snap install helm --classic
+	# Registries configuration
+	mkdir -p "$REGISTRY_DIR"
+        cp -vf "$REGISTRIES_FILE" "$REGISTRY_DIR"
+	mkdir -p "$(dirname "$REGISTRY_DIR/$REGISTRIES_ALIASES_FILE")"
+        cp -vf "$REGISTRIES_ALIASES_FILE" "$REGISTRY_DIR"
+        printf "%s\n" "$(t 'install.done')"
         
         if (( DRIVER & DOCKER )); then
 	    sudo snap remove docker
@@ -266,6 +239,7 @@ main() {
             # Install Docker via snap
             sudo snap install docker
             sudo snap connect circleci:docker docker
+	    docker system info || exit 0
         fi
         
         if (( DRIVER & PODMAN )); then
@@ -275,11 +249,8 @@ main() {
             # If user still wants snap version, uncomment:
             # sudo snap install --edge --devmode podman
             # sudo snap connect circleci:docker podman
+	    podman system info || exit 0
         fi
-        
-        add_registries "$REGISTRIES_FILE"
-        add_registries_aliases "$REGISTRIES_ALIASES_FILE"
-        printf "%s\n" "$(t 'install.done')"
     fi
 
     minikube -p sysbox stop || true
@@ -296,8 +267,8 @@ main() {
     fi
     
     minikube -p sysbox addons enable metrics-server
-    cat "$REGISTRIES_FILE" && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf
-    cat "$REGISTRIES_ALIASES_FILE" && exit 0 | minikube -p sysbox ssh sudo tee /etc/containers/registries.conf.d/shortnames.conf
+    minikube -p sysbox cp -v "$REGISTRIES_FILE" "/etc/containers/$REGISTRIES_FILE"
+    minikube -p sysbox cp -v "$REGISTRIES_ALIASES_FILE" "/etc/containers/$REGISTRIES_ALIASES_FILE"
     minikube profile list
     
     echo ""
