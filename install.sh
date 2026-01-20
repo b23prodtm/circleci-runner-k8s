@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 HELM_VERSION="v1.6.1"
-HELM_INSTALL=0x1
+SYSBOX_INSTALL=0x1
 KUBERNETES_INSTALL=0x10
 NO_GATEWAY_INSTALL=0x100
 LANG="EN"
@@ -98,7 +98,7 @@ ask_gateway_method() {
     while true; do
         echo "$(t 'installation.gateway.question')"
         echo "  1) $(t 'installation.gateway.kubernetes')"
-        echo "  2) $(t 'installation.gateway.helm')"
+        echo "  2) $(t 'installation.gateway.sysbox')"
         echo "  3) $(t 'installation.gateway.none')"
         read -p "$(t 'installation.gateway.prompt') " choix
         case $choix in
@@ -108,8 +108,8 @@ ask_gateway_method() {
                 break
                 ;;
             2 )
-                GATEWAY_INSTALL=$HELM_INSTALL
-                echo "$(t 'installation.gateway.helm_selected')"
+                GATEWAY_INSTALL=$SYSBOX_INSTALL
+                echo "$(t 'installation.gateway.sysbox_selected')"
                 break
                 ;;
             3 )
@@ -132,8 +132,8 @@ confirm_choices() {
     echo "========================================"
     echo "$(t 'installation.confirm.helm_version') $HELM_VERSION"
     
-    if (( GATEWAY_INSTALL == HELM_INSTALL )); then
-        echo "$(t 'installation.confirm.method') $(t 'installation.gateway.helm')"
+    if (( GATEWAY_INSTALL == sysbox_INSTALL )); then
+        echo "$(t 'installation.confirm.method') $(t 'installation.gateway.sysbox')"
     elif (( GATEWAY_INSTALL == KUBERNETES_INSTALL )); then
         echo "$(t 'installation.confirm.method') $(t 'installation.gateway.kubernetes')"
     else
@@ -172,16 +172,13 @@ main() {
     echo ""
 
     sleep 1
-    printf "%s\n" "$(t 'installation.steps.sysbox')"
-    kubectl label nodes sysbox sysbox-install=yes
-    kubectl apply -f https://raw.githubusercontent.com/b23prodtm/sysbox/refs/heads/patch-1/sysbox-k8s-manifests/sysbox-install.yaml
-    printf "%s\n" "$(t 'installation.steps.done')"
 
     # Container runner installation
     printf "%s\n" ""
     printf "%s\n" "$(t 'installation.steps.container_runner')"
     helm uninstall container-agent -n circleci || true
     kubectl delete namespace circleci || true
+    printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
     helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
     helm repo update
     kubectl create namespace circleci
@@ -190,29 +187,33 @@ main() {
 
     sleep 1
     printf "%s\n" ""
-    if (( GATEWAY_INSTALL & HELM_INSTALL )); then
-	printf "%s\n" "$(t 'installation.steps.helm_install')"
-        helm install eg oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" -n envoy-gateway-system --create-namespace
-        kubectl wait --timeout=5m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
-        kubectl apply -f https://github.com/envoyproxy/gateway/releases/download/latest/quickstart.yaml -n default
+    if (( GATEWAY_INSTALL & SYSBOX_INSTALL )); then
+	printf "%s\n" "$(t 'installation.steps.sysbox_install')"
+        kubectl label nodes sysbox sysbox-install=yes
+        kubectl apply -f https://raw.githubusercontent.com/b23prodtm/sysbox/refs/heads/patch-1/sysbox-k8s-manifests/sysbox-install.yaml
+        printf "%s\n" "$(t 'installation.steps.done')"
     fi
     if (( GATEWAY_INSTALL & KUBERNETES_INSTALL )); then
         printf "%s\n" "$(t 'installation.steps.kubernetes_install')"
         kubectl apply --force-conflicts --server-side -f https://github.com/envoyproxy/gateway/releases/download/latest/install.yaml
-        printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
         dir="$(pwd)"; cd  "/home/$USER"
         helm pull oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" --untar
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/gatewayapi-crds.yaml
         kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/generated
         rm -Rfv ./gateway-helm
 	cd "$dir"
+        printf "%s\n" "$(t 'installation.steps.done')"
     fi
-    printf "%s\n" "$(t 'installation.steps.done')"
 
     sleep 1
     if (( GATEWAY_INSTALL & NO_GATEWAY_INSTALL )); then
 	helm uninstall eg -n envoy-gateway-system|| true
+        printf "%s\n" "$(t 'installation.steps.sysbox')"
 	kubectl delete namespace envoy-gateway-system || true
+        kubectl delete -f https://raw.githubusercontent.com/b23prodtm/sysbox/refs/heads/patch-1/sysbox-k8s-manifests/sysbox-install.yaml
+        kubectl apply -f https://raw.githubusercontent.com/b23prodtm/sysbox/refs/heads/patch-1/sysbox-k8s-manifests/sysbox-uninstall.yaml
+        kubectl delete -f https://raw.githubusercontent.com/b23prodtm/sysbox/refs/heads/patch-1/sysbox-k8s-manifests/sysbox-uninstall.yaml
+        printf "%s\n" "$(t 'installation.steps.done')"
     else
         printf "%s\n" "$(t 'installation.steps.ssh_enable')"
 	printf "%s\n" "$(t 'installation.steps.envoy_version') $HELM_VERSION"

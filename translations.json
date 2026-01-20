@@ -30,7 +30,7 @@
     },
     "driver": {
       "question": "Which driver would you like to use?",
-      "podman": "Podman (experimental)",
+      "podman": "Podman",
       "docker": "Docker",
       "prompt": "Your choice (1 or 2):",
       "podman_selected": "✓ Podman driver selected",
@@ -53,16 +53,18 @@
     },
      "installation": {
       "menu": {
-        "title": "CircleCI & Envoy Gateway Installation"
+        "title": "CircleCI with Sysbox and Envoy Gateway Installation"
       },
       "gateway": {
-        "question": "Which installation method for Envoy Gateway (only for Rerun SSH Jobs)?",
+        "question": "Which installation?",
         "helm": "Helm",
-        "kubernetes": "Kubernetes (recommended)",
-        "none": "don't install/uninstall the gateway (faster)",
+        "sysbox": "Sysbox",
+        "kubernetes": "Kubernetes Gateway (to rerun SSH jobs)",
+        "none": "don't install/uninstall Gateway and Sysbox",
         "upgrade": "Upgrade existing installation",
         "prompt": "Your choice (1, 2 or 3):",
         "helm_selected": "✓ Helm installation method selected",
+        "sysbox_selected": "✓ Sysbox installation method selected",
         "kubernetes_selected": "✓ Kubernetes installation method selected",
         "none_selected": "✓ None/Uninstall selected",
         "upgrade_selected": "✓ Upgrade method selected",
@@ -82,6 +84,7 @@
         "ssh_enable": "Enable rerun job with SSH...",
         "envoy_version": "Envoyproxy/gateway-helm version",
         "helm_install": "Installation with Helm...",
+        "sysbox_install": "Installation with Sysbox...",
         "kubernetes_install": "Installation with Kubernetes...",
         "helm_upgrade": "Upgrade with Helm...",
         "redeploy": "Redeploy Manifest for SSH gateway to be programmed...",
@@ -114,7 +117,7 @@
     },
     "driver": {
       "question": "Quel driver souhaitez-vous utiliser ?",
-      "podman": "Podman (expérimental)",
+      "podman": "Podman",
       "docker": "Docker",
       "prompt": "Votre choix (1 ou 2) :",
       "podman_selected": "✓ Driver Podman sélectionné",
@@ -138,16 +141,18 @@
     ,
     "installation": {
       "menu": {
-        "title": "Installation de CircleCI et Envoy Gateway"
+        "title": "Installation de CircleCI avec Sysbox et Envoy Gateway"
       },
       "gateway": {
-        "question": "Quelle méthode d'installation pour Envoy Gateway (seulement si nécessaire de relancer les jobs en SSH) ?",
+        "question": "Quelle méthode d'installation ?",
         "helm": "Helm",
-        "kubernetes": "Kubernetes (recommandé)",
-        "none": "ne pas installer/désinstaller la passerelle (plus rapide)",
+        "sysbox": "Sysbox",
+        "kubernetes": "Passerelle Kubernetes (pour relancer les jobs en SSH)",
+        "none": "ne pas installer/désinstaller la passerelle et Sysbox",
         "upgrade": "Mettre à jour une installation existante",
         "prompt": "Votre choix (1, 2 ou 3) :",
         "helm_selected": "✓ Méthode d'installation Helm sélectionnée",
+        "sysbox_selected": "✓ Méthode d'installation Sysbox sélectionnée",
         "kubernetes_selected": "✓ Méthode d'installation Kubernetes sélectionnée",
         "upgrade_selected": "✓ Méthode de mise à jour sélectionnée",
         "none_selected": "✓ Aucune/désinstallation selectionnée",
@@ -167,6 +172,7 @@
         "ssh_enable": "Activation du relancement des jobs via SSH...",
         "envoy_version": "Version d'Envoyproxy/gateway-helm",
         "helm_install": "Installation avec Helm...",
+        "sysbox_install": "Installation avec Sysbox...",
         "kubernetes_install": "Installation avec Kubernetes...",
         "helm_upgrade": "Mise à jour avec Helm...",
         "redeploy": "Redéploiement du manifeste pour programmer la passerelle SSH...",
