@@ -13,7 +13,7 @@ jobs:
 
     container:
       image: ghcr.io/nestybox/ubuntu-jammy-systemd-docker
-      options: --privileged --entrypoint "/sbin/init"
+      options: --entrypoint "/sbin/init"
 
     env:
       DOCKER_USER: ${{ secrets.DOCKER_USER }}
