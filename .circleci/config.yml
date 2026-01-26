@@ -20,7 +20,7 @@ jobs:
         entrypoint: ["/sbin/init"]
       #- image: cimg/base:2024.12
         environment:
-          RUNNER_CLASS: $K8S_RUNNER_RESOURCE
+          RESOURCE_CLASS: $K8S_RUNNER_RESOURCE
           TOKEN: $K8S_RUNNER_TOKEN
         auth:
           username: $DOCKER_USER
