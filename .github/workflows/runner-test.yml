@@ -1,0 +1,49 @@
+name: runner-test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - update/kind-deployment-setup
+
+jobs:
+  runner-test:
+    runs-on: ubuntu-latest
+
+    # Use the same Docker image as CircleCI
+    container:
+      image: registry.nestybox.com/nestybox/ubuntu-noble-systemd-docker
+      options: --entrypoint "/sbin/init"
+
+    env:
+      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+      K8S_RUNNER_TOKEN: ${{ secrets.K8S_RUNNER_TOKEN }}
+      K8S_RUNNER_RESOURCE: ${{ secrets.K8S_RUNNER_RESOURCE }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify environment
+        run: printenv
+
+      - name: Install podman and minikube
+        run: |
+          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+          ./configure_podman.sh
+
+      - name: Install helm and charts
+        run: |
+          set -eu
+          cp values.yaml.example values.yaml
+          sed -i \
+            -e "s/YOUR_CIRCLECI_TOKEN_HERE/${K8S_RUNNER_TOKEN}/" \
+            -e "s#MY_ORG/RESOURCE_CLASS_HERE#${K8S_RUNNER_RESOURCE}#" \
+            values.yaml
+          ./install_ssh_gateway.sh
+
+      - name: Cleanup cluster
+        run: |
+          minikube delete -p sysbox || true
