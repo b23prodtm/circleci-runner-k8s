@@ -14,17 +14,11 @@ workflows:
 ###################
 jobs:
   runner-test:
-    resource_class: medium #b23prodtm/linux
+    resource_class: b23prodtm/linux
     docker:
       - image: registry.nestybox.com/nestybox/ubuntu-noble-systemd-docker
         entrypoint: ["/sbin/init"]
       #- image: cimg/base:2024.12
-        environment:
-          RESOURCE_CLASS: $K8S_RUNNER_RESOURCE
-          TOKEN: $K8S_RUNNER_TOKEN
-        auth:
-          username: $DOCKER_USER
-          password: $DOCKER_PASS
     steps:
       - checkout
       - run:
@@ -34,13 +28,15 @@ jobs:
       - run:
           name: Install podman and minikube
           command: |
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
             ./configure_podman.sh
       - run:
           name: Install helm and charts
           command: |
+            set -eu
             cp values.yaml.example values.yaml
-            sed -i -e "s/YOUR_CIRCLECI_TOKEN_HERE/${TOKEN}/" \
-            -e "s#MY_ORG/RESOURCE_CLASS_HERE#${RESOURCE_CLASS}#" values.yaml
+            sed -i -e "s/YOUR_CIRCLECI_TOKEN_HERE/${K8S_RUNNER_TOKEN}/" \
+            -e "s#MY_ORG/RESOURCE_CLASS_HERE#${K8S_RUNNER_RESOURCE}#" values.yaml
             ./install_ssh_gateway.sh
       - run:
           name: Cleanup cluster
