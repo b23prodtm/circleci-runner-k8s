@@ -14,9 +14,9 @@ workflows:
 ###################
 jobs:
   runner-test:
-    resource_class: b23prodtm/linux
+    resource_class: medium #b23prodtm/linux
     docker:
-      - image: registry.nestybox.com/nestybox/ubuntu-noble-systemd-docker
+      - image: ghcr.io/nestybox/ubuntu-jammy-systemd-docker
         entrypoint: ["/sbin/init"]
       #- image: cimg/base:2024.12
     steps:
