@@ -28,6 +28,11 @@ jobs:
       - name: Verify environment
         run: printenv
 
+      - name: Install required packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gpg
+
       - name: Install podman and minikube
         run: |
           echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
