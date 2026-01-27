@@ -2,11 +2,14 @@
 
 PODMAN=0x10
 DOCKER=0x01
-KUBEV="v1.32.11"
+KUBERNETES_VERSION="v1.32"
+CRIO_VERSION="v1.32"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
-
+REGISTRY_DIR="/home/$USER/.config/containers"
+REGISTRIES_FILE="registries.conf"
+REGISTRIES_ALIASES_FILE="registries.conf.d/shortnames.conf"
 # Load translations from JSON file
 load_translations() {
     if [[ ! -f "$TRANSLATIONS_FILE" ]]; then
@@ -157,74 +160,118 @@ main() {
     echo "$(t 'main.starting')"
     echo ""
     
-    # === ORIGINAL SCRIPT ===
+    # === UBUNTU-SPECIFIC INSTALLATION ===
 
     if (( INSTALL & 0x1 )); then
         printf "%s\n" ""
         printf "%s\n" "$(t 'install.dependencies')"
+        
+        # Update package list
 	if ! command -v minikube &> /dev/null; then
-            dir="$(pwd)"; cd "/home/$USER"
-	    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-	    chmod 0644 minikube-linux-amd64
-	    sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+	    sudo apt-get install -y curl
+	    dir="$(pwd)"; cd "/home/$USER"
+	    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+	    chmod 0644 minikube_latest_amd64.deb
+	    sudo dpkg -i minikube_latest_amd64.deb
+	    rm minikube_latest_amd64.deb
 	    cd "$dir"
- 	fi
-	if ! command -v snap &> /dev/null; then
-            sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
-            sudo zypper --gpg-auto-import-keys refresh
-            sudo zypper dup --from snappy
-            sudo zypper install snapd
-            sudo systemctl enable --now snapd
-            sudo systemctl enable --now snapd.apparmor
 	fi
+	# Install CRI-O (needed by sysbox)
+	if ! command -v crio &> /dev/null; then
+	    dir="$(pwd)"; cd "/home/$USER"
+	    curl -fsSL "https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/Release.key" |
+	    sudo gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+	    echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_VERSION/deb/ /" |
+    	    sudo tee /etc/apt/sources.list.d/cri-o.list
+	    rm Release.key
+	    cd "$dir"
+            sudo apt-get update
+            sudo apt-get install -y cri-o
+	    sudo systemctl start crio.service
+	fi
+	# Install Kubernetes for CRI-O
+	if ! command -v kubectl &> /dev/null; then
+	    dir="$(pwd)"; cd "/home/$USER"
+	    curl -fsSL "https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key" |
+            sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+            echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" |
+            sudo tee /etc/apt/sources.list.d/kubernetes.list
+	    rm Release.key
+	    cd "$dir"
+            sudo apt-get update
+            sudo apt-get install -y kubectl
+	fi
+	# Install crictl
+	if ! command -v crictl &> /dev/null; then
+	    sudo apt-get install -y kubeadm kubelet
+	fi
+        # Install snapd if not already installed
+        if ! command -v snap &> /dev/null; then
+            sudo apt-get install -y snapd
+            sudo systemctl enable --now snapd.socket
+            sudo systemctl enable --now snapd
+            # Wait for snapd to be ready
+            sleep 5
+        fi
+        
+        # Install CircleCI CLI, helm
         sudo snap install circleci
 	sudo snap install helm --classic
-        if ! command -v kubectl &> /dev/null; then
-	    alias kubectl="minikube kubectl --"
-	fi
+	# Registries configuration
+	mkdir -p "$REGISTRY_DIR"
+        cp -vf "$REGISTRIES_FILE" "$REGISTRY_DIR"
+	mkdir -p "$(dirname "$REGISTRY_DIR/$REGISTRIES_ALIASES_FILE")"
+        cp -vf "$REGISTRIES_ALIASES_FILE" "$REGISTRY_DIR"
+        printf "%s\n" "$(t 'install.done')"
+        
         if (( DRIVER & DOCKER )); then
-           sudo snap remove docker
-            if ! command -v docker  &> /dev/null; then
-                dir="$(pwd)"; cd "/home/$USER"
-	        curl -fsSL https://get.docker.com/rootless -o get-docker.sh
-		chmod 0755 get=docker.sh
- 		./get-docker.sh
+	    sudo snap remove docker
+	    if ! command -v docker  &> /dev/null; then
+	        sudo apt-get install -y curl
+    	        dir="$(pwd)"; cd "/home/$USER"
+                curl -fsSL https://get.docker.com/rootless -o get-docker.sh
+		chmod 0755 get-docker.sh
+                ./get-docker.sh
+	        rm get-docker.sh
 		cd "$dir"
             fi
-            snap install docker
+            # Install Docker via snap
+            sudo snap install docker
             sudo snap connect circleci:docker docker
+	    docker system info || exit 0
         fi
+        
         if (( DRIVER & PODMAN )); then
-            snap install --edge --devmode podman
-            sudo snap connect circleci:docker podman
+            # Install Podman via apt (more stable on Ubuntu than snap)
+            sudo apt-get update
+            sudo apt-get install -y podman
+            # If user still wants snap version, uncomment:
+            # sudo snap install --edge --devmode podman
+            # sudo snap connect circleci:docker podman
+	    podman system info || exit 0
         fi
-        printf "%s\n" "$(t 'install.done')"
-
-        printf "%s\n"  "[[registry]]" \
-        "  # DockerHub" \
-        "  \"location\" = \"docker.io\"" \
-        | sudo tee /etc/containers/registries.conf.d/k8s-registries.conf
-        printf "%s\n"  "[aliases]" \
-        "  # CircleCI" \
-        "  \"circleci/runner-agent\" = \"docker.io/circleci/runner-agent\"" \
-        "  \"envoyproxy/gateway-dev\" = \"docker.io/envoyproxy/gateway-dev\"" \
-        | sudo tee /etc/containers/registries.conf.d/k8s-shortnames.conf
-        printf "%s\n" "$(t 'install.containers_copied')"
-        cp -Rvf /etc/containers/registries.conf.d "/home/$USER/.config/containers/"
     fi
 
     minikube -p sysbox stop || true
     minikube -p sysbox delete || true
     
+    minikube config -p sysbox set rootless true
+    
     if (( DRIVER & PODMAN )); then
-        minikube start --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBEV"
+        minikube start --extra-config=kubelet.allowed-unsafe-sysctls=kernel.msg*,net.core.somaxconn \
+        --driver=podman --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBERNETES_VERSION"
     fi
     
     if (( DRIVER & DOCKER )); then
-        minikube start --driver=docker --container-runtime=containerd -p sysbox --kubernetes-version="$KUBEV"
+        minikube start --extra-config=kubelet.allowed-unsafe-sysctls=kernel.msg*,net.core.somaxconn \
+        --driver=docker --container-runtime=cri-o -p sysbox --kubernetes-version="$KUBERNETES_VERSION"
     fi
     
     minikube -p sysbox addons enable metrics-server
+    minikube -p sysbox cp "$REGISTRIES_FILE" "/etc/containers/$REGISTRIES_FILE"
+    minikube -p sysbox cp "$REGISTRIES_ALIASES_FILE" "/etc/containers/$REGISTRIES_ALIASES_FILE"
+    minikube -p sysbox start
     minikube profile list
     
     echo ""

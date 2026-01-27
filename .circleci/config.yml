@@ -6,61 +6,39 @@ version: 2.1
 workflows:
   main:
     jobs:
-      - runner-job
-      - deploy-in-minikube
+      - runner-test:
+          context: Info-b23prodtm
 
 ###################
 # Job Definitions #
 ###################
 jobs:
-  runner-job:
-    # The resource_class feature allows configuring CPU and RAM resources for each job. Different resource classes are available for different executors. https://circleci.com/docs/2.0/configuration-reference/#resourceclass
-    resource_class: $K8S_RUNNER_RESOURCE
+  runner-test:
+    resource_class: medium #b23prodtm/linux
     docker:
-    - image: nestybox/ubuntu-noble-systemd-docker
-      entrypoint: ["dockerd"]
-      command: ["--host=unix:///var/run/docker.sock"]
-    steps:
-      - run:
-          name: Verify environment
-          command: |
-            echo "Executing runner in a k8s cluster"
-            echo "Kubernetes Service Host: $KUBERNETES_SERVICE_HOST"
-            echo "Kubernetes Service Port: $KUBERNETES_SERVICE_PORT"
-            printenv
-  deploy-in-minikube:
-    # The resource_class feature allows configuring CPU and RAM resources for each job. Different resource classes are available for different executors. https://circleci.com/docs/2.0/configuration-reference/#resourceclass
-    resource_class: $K8S_RUNNER_RESOURCE
-    docker:
-    - image: nestybox/ubuntu-noble-systemd-docker
-      entrypoint: ["dockerd"]
-      command: ["--host=unix:///var/run/docker.sock"]
+      - image: ghcr.io/nestybox/ubuntu-jammy-systemd-docker
+        entrypoint: ["/sbin/init"]
+      #- image: cimg/base:2024.12
     steps:
       - checkout
       - run:
-          name: install minikube
+          name: Verify environment
           command: |
-            DEBIAN_FRONTEND=noninteractive
-            sudo apt-get update -y
-            sudo apt-get install apt-transport-https
-            sudo apt install -y virtualbox jq
-            sudo snap install kubectl --classic
-            sudo snap install helm --classic
-
-            curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
-            sudo dpkg -i minikube_latest_amd64.deb && minikube version
-            rm minikube_latest_amd64.deb
+            printenv
       - run:
-          name: minikube start
+          name: Install podman and minikube
           command: |
-            time docker version
-            minikube version
-            minikube start --driver=docker
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            ./configure_podman.sh
       - run:
-          name: install helm chart
+          name: Install helm and charts
           command: |
-            helm install runner . --set image.tag=launch-agent --set runnerToken=$K8S_RUNNER_TOKEN --set resourceClass=$K8S_RUNNER_RESOURCE
+            set -eu
+            cp values.yaml.example values.yaml
+            sed -i -e "s/YOUR_CIRCLECI_TOKEN_HERE/${K8S_RUNNER_TOKEN}/" \
+            -e "s#MY_ORG/RESOURCE_CLASS_HERE#${K8S_RUNNER_RESOURCE}#" values.yaml
+            ./install_ssh_gateway.sh
       - run:
-          name: wait for runner job completion
+          name: Cleanup cluster
           command: |
-            timeout 5m ./scripts/wait_for_task_complete.sh
+            minikube delete -p sysbox || true
