@@ -1,4 +1,18 @@
 {
+  "en": { 
+    "install": "Installing...", 
+    "ok": "OK",
+    "warn": "Warning", 
+    "err": "Error", 
+    "relogin": "You may need to re-login for group changes to take effect." 
+  },
+  "fr": { 
+    "install": "Installation en cours...", 
+    "ok": "OK", 
+    "warn": "Attention", 
+    "err": "Erreur", 
+    "relogin": "Vous devrez peut-être vous reconnecter pour appliquer les changements de groupe." 
+  },
   "EN": {
     "menu": {
       "title": "Minikube Configuration"
@@ -17,7 +31,7 @@
     "driver": {
       "question": "Which driver would you like to use?",
       "podman": "Podman",
-      "docker": "Docker (recommended)",
+      "docker": "Docker",
       "prompt": "Your choice (1 or 2):",
       "podman_selected": "✓ Podman driver selected",
       "docker_selected": "✓ Docker driver selected",
@@ -39,16 +53,20 @@
     },
      "installation": {
       "menu": {
-        "title": "CircleCI & Envoy Gateway Installation"
+        "title": "CircleCI with Sysbox and Envoy Gateway Installation"
       },
       "gateway": {
-        "question": "Which installation method for Envoy Gateway?",
+        "question": "Which installation?",
         "helm": "Helm",
-        "kubernetes": "Kubernetes (recommended)",
+        "sysbox": "Sysbox",
+        "kubernetes": "Kubernetes Gateway (to rerun SSH jobs)",
+        "none": "don't install/uninstall Gateway and Sysbox",
         "upgrade": "Upgrade existing installation",
         "prompt": "Your choice (1, 2 or 3):",
         "helm_selected": "✓ Helm installation method selected",
+        "sysbox_selected": "✓ Sysbox installation method selected",
         "kubernetes_selected": "✓ Kubernetes installation method selected",
+        "none_selected": "✓ None/Uninstall selected",
         "upgrade_selected": "✓ Upgrade method selected",
         "invalid": "Please choose 1, 2 or 3"
       },
@@ -66,6 +84,7 @@
         "ssh_enable": "Enable rerun job with SSH...",
         "envoy_version": "Envoyproxy/gateway-helm version",
         "helm_install": "Installation with Helm...",
+        "sysbox_install": "Installation with Sysbox...",
         "kubernetes_install": "Installation with Kubernetes...",
         "helm_upgrade": "Upgrade with Helm...",
         "redeploy": "Redeploy Manifest for SSH gateway to be programmed...",
@@ -74,7 +93,10 @@
       "main": {
         "starting": "Starting installation...",
         "success": "✓ Installation completed successfully!",
-	"dashboard": "Go to the dashboard!"
+      	"dashboard": "Go to the dashboard!"
+      },
+      "error": {
+        "token_missing": "The file is missing and/or token value not set."
       }
     }
   },
@@ -96,7 +118,7 @@
     "driver": {
       "question": "Quel driver souhaitez-vous utiliser ?",
       "podman": "Podman",
-      "docker": "Docker (recommandé)",
+      "docker": "Docker",
       "prompt": "Votre choix (1 ou 2) :",
       "podman_selected": "✓ Driver Podman sélectionné",
       "docker_selected": "✓ Driver Docker sélectionné",
@@ -119,17 +141,21 @@
     ,
     "installation": {
       "menu": {
-        "title": "Installation de CircleCI et Envoy Gateway"
+        "title": "Installation de CircleCI avec Sysbox et Envoy Gateway"
       },
       "gateway": {
-        "question": "Quelle méthode d'installation pour Envoy Gateway ?",
+        "question": "Quelle méthode d'installation ?",
         "helm": "Helm",
-        "kubernetes": "Kubernetes (recommandé)",
+        "sysbox": "Sysbox",
+        "kubernetes": "Passerelle Kubernetes (pour relancer les jobs en SSH)",
+        "none": "ne pas installer/désinstaller la passerelle et Sysbox",
         "upgrade": "Mettre à jour une installation existante",
         "prompt": "Votre choix (1, 2 ou 3) :",
         "helm_selected": "✓ Méthode d'installation Helm sélectionnée",
+        "sysbox_selected": "✓ Méthode d'installation Sysbox sélectionnée",
         "kubernetes_selected": "✓ Méthode d'installation Kubernetes sélectionnée",
         "upgrade_selected": "✓ Méthode de mise à jour sélectionnée",
+        "none_selected": "✓ Aucune/désinstallation selectionnée",
         "invalid": "Veuillez choisir 1, 2 ou 3"
       },
       "confirm": {
@@ -146,6 +172,7 @@
         "ssh_enable": "Activation du relancement des jobs via SSH...",
         "envoy_version": "Version d'Envoyproxy/gateway-helm",
         "helm_install": "Installation avec Helm...",
+        "sysbox_install": "Installation avec Sysbox...",
         "kubernetes_install": "Installation avec Kubernetes...",
         "helm_upgrade": "Mise à jour avec Helm...",
         "redeploy": "Redéploiement du manifeste pour programmer la passerelle SSH...",
@@ -154,7 +181,10 @@
       "main": {
         "starting": "Démarrage de l'installation...",
         "success": "✓ Installation terminée avec succès !",
-	"dashboard": "Allez au tableau de bord!"
+      	"dashboard": "Allez au tableau de bord!"
+      },
+      "error": {
+        "token_missing": "Le fichier est manquant et/ou la valeur du token n'est pas définie."
       }
     }
 

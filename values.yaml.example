@@ -34,11 +34,12 @@ agent:
   resourceClasses:
     MY_ORG/RESOURCE_CLASS_HERE:
       token: YOUR_CIRCLECI_TOKEN_HERE
+      # Rootless CRI-O with user namespaces (replaces sysbox-runc)
+      # Requires kernel.unprivileged_userns_clone=1 on the node
       metadata:
         annotations:
           io.kubernetes.cri-o.userns-mode: "auto:size=65536"
-      spec:
-        runtimeClassName: sysbox-runc
+      # No runtimeClassName needed - uses default CRI-O rootless runtime
   ssh:
     enabled: true
 

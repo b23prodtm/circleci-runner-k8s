@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
 HELM_VERSION="v1.6.1"
-HELM_INSTALL=0x1
 KUBERNETES_INSTALL=0x10
-HELM_UPGRADE=0x100
+NO_GATEWAY_INSTALL=0x100
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -32,15 +31,14 @@ check_values_file() {
         echo ""
         exit 1
     fi
-    
-    # Verify the file contains a token
+
     if grep -q "YOUR_CIRCLECI_TOKEN_HERE" "$VALUES_FILE"; then
         echo ""
         echo "$(t 'installation.error.token_placeholder')"
         echo ""
         exit 1
     fi
-    
+
     if ! grep -q "token:" "$VALUES_FILE"; then
         echo ""
         echo "$(t 'installation.error.token_missing')"
@@ -98,8 +96,7 @@ ask_gateway_method() {
     while true; do
         echo "$(t 'installation.gateway.question')"
         echo "  1) $(t 'installation.gateway.kubernetes')"
-        echo "  2) $(t 'installation.gateway.helm')"
-        echo "  3) $(t 'installation.gateway.upgrade')"
+        echo "  2) $(t 'installation.gateway.none')"
         read -p "$(t 'installation.gateway.prompt') " choix
         case $choix in
             1 )
@@ -108,13 +105,8 @@ ask_gateway_method() {
                 break
                 ;;
             2 )
-                GATEWAY_INSTALL=$HELM_INSTALL
-                echo "$(t 'installation.gateway.helm_selected')"
-                break
-                ;;
-            3 )
-                GATEWAY_INSTALL=$HELM_UPGRADE
-                echo "$(t 'installation.gateway.upgrade_selected')"
+                GATEWAY_INSTALL=$NO_GATEWAY_INSTALL
+                echo "$(t 'installation.gateway.none_selected')"
                 break
                 ;;
             * )
@@ -131,17 +123,15 @@ confirm_choices() {
     echo "  $(t 'installation.confirm.title')"
     echo "========================================"
     echo "$(t 'installation.confirm.helm_version') $HELM_VERSION"
-    
-    if (( GATEWAY_INSTALL == HELM_INSTALL )); then
-        echo "$(t 'installation.confirm.method') $(t 'installation.gateway.helm')"
-    elif (( GATEWAY_INSTALL == KUBERNETES_INSTALL )); then
+
+    if (( GATEWAY_INSTALL == KUBERNETES_INSTALL )); then
         echo "$(t 'installation.confirm.method') $(t 'installation.gateway.kubernetes')"
     else
-        echo "$(t 'installation.confirm.method') $(t 'installation.gateway.upgrade')"
+        echo "$(t 'installation.confirm.method') $(t 'installation.gateway.none')"
     fi
     echo "========================================"
     echo ""
-    
+
     while true; do
         read -p "$(t 'installation.confirm.question') " reponse
         case $reponse in
@@ -159,80 +149,135 @@ confirm_choices() {
     done
 }
 
+
+# Install helm if not present
+install_helm() {
+    if command -v helm &> /dev/null; then
+        printf "%s\n" "helm already installed: $(helm version --short)"
+        return 0
+    fi
+    printf "%s\n" "Installing helm..."
+    # Try snap first (available after configure.sh)
+    if command -v snap &> /dev/null; then
+        sudo snap install helm --classic && return 0
+    fi
+    # Download binary directly from GitHub releases (HTTP/1.1 to avoid stream errors)
+    local HELM_INSTALL_VERSION="v3.14.4"
+    local ARCH
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64)  ARCH="amd64" ;;
+        aarch64) ARCH="arm64" ;;
+        *)        ARCH="amd64" ;;
+    esac
+    local HELM_URL="https://get.helm.sh/helm-${HELM_INSTALL_VERSION}-linux-${ARCH}.tar.gz"
+    local TMPDIR
+    TMPDIR=$(mktemp -d)
+    curl --http1.1 -fsSL "$HELM_URL" -o "$TMPDIR/helm.tar.gz"
+    tar -xzf "$TMPDIR/helm.tar.gz" -C "$TMPDIR"
+    sudo mv "$TMPDIR/linux-${ARCH}/helm" /usr/local/bin/helm
+    sudo chmod +x /usr/local/bin/helm
+    rm -rf "$TMPDIR"
+    helm version --short
+}
+
+# Ensure minikube runner profile is up and kubeconfig is set
+ensure_cluster() {
+    if ! minikube status -p runner &> /dev/null; then
+        printf "%s\n" "Minikube profile 'runner' not running, starting it..."
+        minikube start -p runner \
+            --driver=docker \
+            --container-runtime=cri-o \
+            --kubernetes-version=v1.32 \
+            --extra-config=kubelet.cgroup-driver=systemd \
+            --extra-config=kubelet.allowed-unsafe-sysctls=kernel.msg*,net.core.somaxconn
+    fi
+    # Set kubeconfig to runner profile
+    minikube update-context -p runner
+    export KUBECONFIG="$HOME/.kube/config"
+    # Wait for API server to be reachable
+    local retries=30
+    until kubectl cluster-info &> /dev/null || (( retries-- == 0 )); do
+        printf "%s\n" "Waiting for API server... ($retries)"
+        sleep 5
+    done
+    kubectl cluster-info
+}
+
 # Main installation script
 main() {
     load_translations
     check_values_file
+    install_helm
+    ensure_cluster
     select_language
     display_menu
     ask_gateway_method
     confirm_choices
-    
+
     echo "$(t 'installation.main.starting')"
     echo ""
 
-    if ! command -v kubectl &> /dev/null; then
-        sudo snap install kubectl --classic
-    fi
-
     sleep 1
-    printf "%s\n" "$(t 'installation.steps.sysbox')"
-    kubectl label nodes sysbox sysbox-install=yes
-    kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
-    printf "%s\n" "$(t 'installation.steps.done')"
 
-    sleep 1
-    printf "%s\n" ""
-    printf "%s\n" "$(t 'installation.steps.ssh_enable')"
-    printf "%s\n" "$(t 'installation.steps.envoy_version') $HELM_VERSION"
-    helm uninstall eg -n envoy-gateway-system|| true
-    kubectl delete namespace envoy-gateway-system || true
-
-    if (( GATEWAY_INSTALL & HELM_INSTALL )); then
-        printf "%s\n" "$(t 'installation.steps.helm_install')"
-        helm install eg oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" -n envoy-gateway-system --create-namespace
-        kubectl wait --timeout=5m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
-        kubectl apply -f https://github.com/envoyproxy/gateway/releases/download/latest/quickstart.yaml -n default
-    fi
-    
-    if (( GATEWAY_INSTALL & KUBERNETES_INSTALL )); then
-        printf "%s\n" "$(t 'installation.steps.kubernetes_install')"
-        kubectl apply --force-conflicts --server-side -f https://github.com/envoyproxy/gateway/releases/download/latest/install.yaml
-    fi
-    
-    if (( GATEWAY_INSTALL & HELM_UPGRADE )); then  
-        printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
-        dir="$(pwd)"; cd  "/home/$USER"
-        helm pull oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" --untar
-        kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/gatewayapi-crds.yaml
-        kubectl apply --force-conflicts --server-side -f ./gateway-helm/crds/generated
-        helm upgrade eg oci://docker.io/envoyproxy/gateway-helm --version "$HELM_VERSION" -n envoy-gateway-system
-        rm -Rfv ./gateway-helm
-	cd "$dir"
-    fi
-    printf "%s\n" "$(t 'installation.steps.done')"
-
-    sleep 1
-    printf "%s\n" "$(t 'installation.steps.redeploy')"
-    helm upgrade --wait --timeout=5m eg container-agent/container-agent -n envoy-gateway-system -f "$VALUES_FILE"
-    kubectl wait eg --timeout=5m --all --for=condition=Programmed -n envoy-gateway-system
-    printf "%s\n" "$(t 'installation.steps.done')"
-    
     # Container runner installation
     printf "%s\n" ""
     printf "%s\n" "$(t 'installation.steps.container_runner')"
     helm uninstall container-agent -n circleci || true
     kubectl delete namespace circleci || true
+    printf "%s\n" "$(t 'installation.steps.helm_upgrade')"
     helm repo add container-agent https://packagecloud.io/circleci/container-agent/helm
     helm repo update
     kubectl create namespace circleci
     helm install container-agent container-agent/container-agent -n circleci -f "$VALUES_FILE"
     printf "%s\n" "$(t 'installation.steps.done')"
 
+    sleep 1
+    printf "%s\n" ""
+
+    if (( GATEWAY_INSTALL & KUBERNETES_INSTALL )); then
+        printf "%s\n" "$(t 'installation.steps.kubernetes_install')"
+        kubectl apply --validate=false --force-conflicts --server-side \
+            -f https://github.com/envoyproxy/gateway/releases/download/latest/install.yaml
+        HELM_TMPDIR=$(mktemp -d)
+        helm pull oci://docker.io/envoyproxy/gateway-helm \
+            --version "$HELM_VERSION" --untar --untardir "$HELM_TMPDIR"
+        kubectl apply --validate=false --force-conflicts --server-side \
+            -f "$HELM_TMPDIR/gateway-helm/crds/gatewayapi-crds.yaml"
+        kubectl apply --validate=false --force-conflicts --server-side \
+            -f "$HELM_TMPDIR/gateway-helm/crds/generated"
+        rm -Rfv "$HELM_TMPDIR"
+        printf "%s\n" "$(t 'installation.steps.done')"
+
+        sleep 1
+        printf "%s\n" "$(t 'installation.steps.ssh_enable')"
+        printf "%s\n" "$(t 'installation.steps.envoy_version') $HELM_VERSION"
+        printf "%s\n" "$(t 'installation.steps.redeploy')"
+        helm upgrade --wait --timeout=5m eg \
+            container-agent/container-agent \
+            -n envoy-gateway-system \
+            -f "$VALUES_FILE"
+        kubectl wait eg --timeout=5m --all \
+            --for=condition=Programmed \
+            -n envoy-gateway-system
+        printf "%s\n" "$(t 'installation.steps.done')"
+    fi
+
+    if (( GATEWAY_INSTALL & NO_GATEWAY_INSTALL )); then
+        helm uninstall eg -n envoy-gateway-system || true
+        kubectl delete namespace envoy-gateway-system || true
+        printf "%s\n" "$(t 'installation.steps.done')"
+    fi
+
     echo ""
     echo "$(t 'installation.main.success')"
-    echo "$(t 'installation.main.dashboard')"
-    printf "%s\n" "minikube -p sysbox dashboard"
+    # Headlamp dashboard (interactive only, skip in CI)
+    if [[ -t 1 ]]; then
+        minikube -p runner addons enable headlamp
+        kubectl create token headlamp --duration 24h -n headlamp || true
+        echo "$(t 'installation.main.dashboard')"
+        minikube -p runner service headlamp -n headlamp --url=true || true
+    fi
 }
 
 # Start the script
