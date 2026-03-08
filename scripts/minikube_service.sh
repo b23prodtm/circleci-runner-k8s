@@ -1,6 +1,6 @@
 #!/bin/bash
 # File: ./scripts/minikube_service.sh
-# Installation script for Minikube Sysbox systemd user service
+# Installation script for Minikube systemd user service
 
 set -e  # Exit on error
 
@@ -45,13 +45,13 @@ create_systemd_dir() {
 
 # Create the service file
 create_service_file() {
-    local service_file="$HOME/.config/systemd/user/minikube-sysbox.service"
+    local service_file="$HOME/.config/systemd/user/minikube.service"
     
     print_info "Creating service file: $service_file"
     
     cat > "$service_file" << 'EOF'
 [Unit]
-Description=Minikube Sysbox Profile Startup with Dashboard
+Description=Minikube Profile Startup with Dashboard
 After=network-online.target
 Wants=network-online.target
 
@@ -60,11 +60,11 @@ Type=forking
 Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 Environment="HOME=%h"
 
-# Start minikube with sysbox profile
-ExecStart=/bin/bash -c 'minikube start -p sysbox && sleep 5 && minikube dashboard -p sysbox'
+# Start minikube with profile
+ExecStart=/bin/bash -c 'minikube start -p runner && sleep 5 && minikube dashboard -p runner'
 
 # Stop minikube gracefully
-ExecStop=/usr/bin/minikube stop -p sysbox
+ExecStop=/usr/bin/minikube stop -p runner
 
 # Restart on failure
 Restart=on-failure
@@ -89,8 +89,8 @@ reload_systemd() {
 
 # Enable the service
 enable_service() {
-    print_info "Enabling minikube-sysbox.service..."
-    systemctl --user enable minikube-sysbox.service
+    print_info "Enabling minikube.service..."
+    systemctl --user enable minikube.service
 }
 
 # Enable lingering (optional but recommended)
@@ -109,14 +109,14 @@ start_service() {
     read -p "Do you want to start the service now? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Starting minikube-sysbox.service..."
-        systemctl --user start minikube-sysbox.service
+        print_info "Starting minikube.service..."
+        systemctl --user start minikube.service
         sleep 2
         print_info "Service status:"
-        systemctl --user status minikube-sysbox.service --no-pager
+        systemctl --user status minikube.service --no-pager
     else
         print_info "Service not started. You can start it later with:"
-        echo "  systemctl --user start minikube-sysbox.service"
+        echo "  systemctl --user start minikube.service"
     fi
 }
 
@@ -126,29 +126,29 @@ show_usage() {
     print_info "Installation complete! Useful commands:"
     echo ""
     echo "  Check service status:"
-    echo "    systemctl --user status minikube-sysbox.service"
+    echo "    systemctl --user status minikube.service"
     echo ""
     echo "  Start service:"
-    echo "    systemctl --user start minikube-sysbox.service"
+    echo "    systemctl --user start minikube.service"
     echo ""
     echo "  Stop service:"
-    echo "    systemctl --user stop minikube-sysbox.service"
+    echo "    systemctl --user stop minikube.service"
     echo ""
     echo "  Restart service:"
-    echo "    systemctl --user restart minikube-sysbox.service"
+    echo "    systemctl --user restart minikube.service"
     echo ""
     echo "  Disable service:"
-    echo "    systemctl --user disable minikube-sysbox.service"
+    echo "    systemctl --user disable minikube.service"
     echo ""
     echo "  View logs:"
-    echo "    journalctl --user -u minikube-sysbox.service -f"
+    echo "    journalctl --user -u minikube.service -f"
     echo ""
 }
 
 # Main installation flow
 main() {
     echo "========================================="
-    echo "Minikube Sysbox Service Installer"
+    echo "Minikube Service Installer"
     echo "========================================="
     echo ""
     
