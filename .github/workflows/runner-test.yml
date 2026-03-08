@@ -50,4 +50,4 @@ jobs:
 
       - name: Cleanup cluster
         run: |
-          minikube delete -p sysbox || true
+          minikube delete -p runner || true
