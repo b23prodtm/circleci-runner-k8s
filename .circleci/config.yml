@@ -16,9 +16,9 @@ jobs:
   runner-test:
     resource_class: medium #b23prodtm/linux
     docker:
-      - image: ghcr.io/nestybox/ubuntu-jammy-systemd-docker
-        entrypoint: ["/sbin/init"]
-      #- image: cimg/base:2024.12
+      #- image: ghcr.io/nestybox/ubuntu-jammy-systemd-docker
+      #  entrypoint: ["/sbin/init"]
+      - image: cimg/base:2024.12
     steps:
       - checkout
       - run:
@@ -41,4 +41,4 @@ jobs:
       - run:
           name: Cleanup cluster
           command: |
-            minikube delete -p sysbox || true
+            minikube delete -p runner || true
