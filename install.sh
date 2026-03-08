@@ -149,10 +149,40 @@ confirm_choices() {
     done
 }
 
+
+# Install helm if not present
+install_helm() {
+    if command -v helm &> /dev/null; then
+        printf "%s\n" "helm already installed: $(helm version --short)"
+        return 0
+    fi
+    printf "%s\n" "Installing helm..."
+    # Try snap first (available after configure.sh)
+    if command -v snap &> /dev/null; then
+        sudo snap install helm --classic && return 0
+    fi
+    # Fallback: apt binary release
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update -qq
+        sudo apt-get install -y curl gpg
+        curl -fsSL https://baltocdn.com/helm/signing.asc | \
+            sudo gpg --dearmor -o /usr/share/keyrings/helm.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] \
+https://baltocdn.com/helm/stable/debian/ all main" | \
+            sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+        sudo apt-get update -qq
+        sudo apt-get install -y helm
+        return 0
+    fi
+    # Last resort: upstream install script
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+}
+
 # Main installation script
 main() {
     load_translations
     check_values_file
+    install_helm
     select_language
     display_menu
     ask_gateway_method
