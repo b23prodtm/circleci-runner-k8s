@@ -149,10 +149,43 @@ confirm_choices() {
     done
 }
 
+
+# Install helm if not present
+install_helm() {
+    if command -v helm &> /dev/null; then
+        printf "%s\n" "helm already installed: $(helm version --short)"
+        return 0
+    fi
+    printf "%s\n" "Installing helm..."
+    # Try snap first (available after configure.sh)
+    if command -v snap &> /dev/null; then
+        sudo snap install helm --classic && return 0
+    fi
+    # Download binary directly from GitHub releases (HTTP/1.1 to avoid stream errors)
+    local HELM_INSTALL_VERSION="v3.14.4"
+    local ARCH
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64)  ARCH="amd64" ;;
+        aarch64) ARCH="arm64" ;;
+        *)        ARCH="amd64" ;;
+    esac
+    local HELM_URL="https://get.helm.sh/helm-${HELM_INSTALL_VERSION}-linux-${ARCH}.tar.gz"
+    local TMPDIR
+    TMPDIR=$(mktemp -d)
+    curl --http1.1 -fsSL "$HELM_URL" -o "$TMPDIR/helm.tar.gz"
+    tar -xzf "$TMPDIR/helm.tar.gz" -C "$TMPDIR"
+    sudo mv "$TMPDIR/linux-${ARCH}/helm" /usr/local/bin/helm
+    sudo chmod +x /usr/local/bin/helm
+    rm -rf "$TMPDIR"
+    helm version --short
+}
+
 # Main installation script
 main() {
     load_translations
     check_values_file
+    install_helm
     select_language
     display_menu
     ask_gateway_method
