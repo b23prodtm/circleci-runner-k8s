@@ -8,13 +8,8 @@ Installation and configuration scripts for Minikube with CircleCI Container Agen
 - `kubectl` - For Kubernetes management
 
 ```bash
-# Installation on Ubuntu (Recommended)
+# Installation on Ubuntu
 sudo apt install -y jq kubectl
-```
-
-```bash
-# Installation on openSUSE
-sudo zypper install jq kubectl
 ```
 
 ## 🔧 Configuration
