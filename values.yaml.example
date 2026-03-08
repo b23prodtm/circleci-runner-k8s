@@ -30,17 +30,9 @@ serviceAccount:
 # Runner API token. See:
 # https://circleci.com/docs/2.0/runner-installation-cli/#command-line-installation
 
-agent:
-  resourceClasses:
-    MY_ORG/RESOURCE_CLASS_HERE:
-      token: YOUR_CIRCLECI_TOKEN_HERE
-      metadata:
-        annotations:
-          io.kubernetes.cri-o.userns-mode: "auto:size=65536"
-      spec:
-        runtimeClassName: sysbox-runc
-  ssh:
-    enabled: true
+# CircleCI runner configuration
+resourceClass: "MY_ORG/RESOURCE_CLASS_HERE"
+runnerToken: "YOUR_CIRCLECI_TOKEN_HERE"
 
 imagePullSecrets: []
 nameOverride: ""

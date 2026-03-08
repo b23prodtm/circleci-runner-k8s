@@ -2,7 +2,7 @@
 
 PODMAN=0x10
 DOCKER=0x01
-KUBEV="v1.32.11"
+KUBEV="v1.30.0"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -166,7 +166,7 @@ main() {
         # Update package list
         sudo apt-get update
 	if ! command -v minikube &> /dev/null; then
-            sudo apt-get install curl
+            sudo apt-get install -y curl
 	    dir="$(pwd)"; cd "/home/$USER"
 	    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
 	    chmod 0644 minikube_latest_amd64.deb
@@ -192,18 +192,11 @@ main() {
 	fi
         
         if (( DRIVER & DOCKER )); then
-	    sudo snap remove docker
-	    if ! command -v docker  &> /dev/null; then
-	        sudo apt-get install curl
-    	        dir="$(pwd)"; cd "/home/$USER"
-                curl -fsSL https://get.docker.com/rootless -o get-docker.sh
-		chmod 0755 get-docker.sh
-                ./get-docker.sh
-		cd "$dir"
+            sudo snap remove docker || true
+            if ! command -v docker &> /dev/null; then
+                sudo snap install docker
             fi
-            # Install Docker via snap
-            sudo snap install docker
-            sudo snap connect circleci:docker docker
+            sudo snap connect circleci:docker docker || true
         fi
         
         if (( DRIVER & PODMAN )); then

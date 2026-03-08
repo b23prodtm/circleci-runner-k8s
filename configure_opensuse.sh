@@ -2,7 +2,7 @@
 
 PODMAN=0x10
 DOCKER=0x01
-KUBEV="v1.32.11"
+KUBEV="v1.30.0"
 LANG="EN"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRANSLATIONS_FILE="${SCRIPT_DIR}/translations.json"
@@ -163,11 +163,13 @@ main() {
         printf "%s\n" ""
         printf "%s\n" "$(t 'install.dependencies')"
 	if ! command -v minikube &> /dev/null; then
+            sudo zypper install -y curl
             dir="$(pwd)"; cd "/home/$USER"
-	    curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
-	    chmod 0644 minikube-linux-amd64
-	    sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
-	    cd "$dir"
+            curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+            chmod 0644 minikube-linux-amd64
+            sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+            cd "$dir"
+
  	fi
 	if ! command -v snap &> /dev/null; then
             sudo zypper addrepo --refresh https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed snappy
@@ -183,20 +185,15 @@ main() {
 	    alias kubectl="minikube kubectl --"
 	fi
         if (( DRIVER & DOCKER )); then
-           sudo snap remove docker
+           sudo snap remove docker || true
             if ! command -v docker  &> /dev/null; then
-                dir="$(pwd)"; cd "/home/$USER"
-	        curl -fsSL https://get.docker.com/rootless -o get-docker.sh
-		chmod 0755 get=docker.sh
- 		./get-docker.sh
-		cd "$dir"
+                sudo snap install docker
             fi
-            snap install docker
-            sudo snap connect circleci:docker docker
+            sudo snap connect circleci:docker docker || true
         fi
         if (( DRIVER & PODMAN )); then
-            snap install --edge --devmode podman
-            sudo snap connect circleci:docker podman
+            sudo snap install --edge --devmode podman
+            sudo snap connect circleci:docker podman || true
         fi
         printf "%s\n" "$(t 'install.done')"
 

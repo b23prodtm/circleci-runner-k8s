@@ -59,8 +59,13 @@ git status
 Configures and starts Minikube with Podman or Docker.
 
 ```bash
-chmod +x configure.sh
-./configure.sh
+# Ubuntu/Debian
+chmod +x configure_ubuntu.sh
+./configure_ubuntu.sh
+
+# openSUSE
+chmod +x configure_opensuse.sh
+./configure_opensuse.sh
 ```
 
 **Interactive options:**
@@ -88,8 +93,9 @@ chmod +x install.sh
 
 ```
 .
-├── configure.sh                  # Minikube configuration script
-├── install.sh                    # CircleCI installation script
+├── configure_ubuntu.sh           # Minikube configuration script (Ubuntu/Debian)
+├── configure_opensuse.sh         # Minikube configuration script (openSUSE)
+├── install.sh                    # CircleCI + Envoy installation script
 ├── translations.json             # EN/FR translations
 ├── values.yaml                   # ⚠️ SECRET - CircleCI token (ignored by git)
 ├── values.yaml.example           # Configuration template
@@ -168,8 +174,8 @@ nano values.yaml
 ### Error: "No token found"
 ```bash
 # Check the file content
-grep "token:" values.yaml
-# Should contain: token: <your_actual_token>
+grep "runnerToken:" values.yaml
+# Should contain: runnerToken: <your_actual_token>
 ```
 
 ## 📝 License

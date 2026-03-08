@@ -15,6 +15,10 @@ load_translations() {
         echo "ERROR: Translation file not found: $TRANSLATIONS_FILE"
         exit 1
     fi
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "ERROR: 'jq' is required but not installed. Please install jq and retry."
+        exit 1
+    fi
 }
 
 # Check if values.yaml exists
@@ -41,7 +45,7 @@ check_values_file() {
         exit 1
     fi
     
-    if ! grep -q "token:" "$VALUES_FILE"; then
+    if ! grep -q "runnerToken:" "$VALUES_FILE"; then
         echo ""
         echo "$(t 'installation.error.token_missing')"
         echo ""
@@ -172,12 +176,18 @@ main() {
     echo ""
 
     if ! command -v kubectl &> /dev/null; then
-        sudo snap install kubectl --classic
+        sudo snap install kubectl --classic || true
+    fi
+    if ! command -v helm &> /dev/null; then
+        sudo snap install helm --classic || {
+            echo "ERROR: 'helm' is required but not installed. Please install Helm."
+            exit 1
+        }
     fi
 
     sleep 1
     printf "%s\n" "$(t 'installation.steps.sysbox')"
-    kubectl label nodes sysbox sysbox-install=yes
+    kubectl label nodes --all sysbox-install=yes --overwrite
     kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/sysbox-install.yaml
     printf "%s\n" "$(t 'installation.steps.done')"
 
@@ -212,11 +222,7 @@ main() {
     fi
     printf "%s\n" "$(t 'installation.steps.done')"
 
-    sleep 1
-    printf "%s\n" "$(t 'installation.steps.redeploy')"
-    helm upgrade --wait --timeout=5m eg container-agent/container-agent -n envoy-gateway-system -f "$VALUES_FILE"
-    kubectl wait eg --timeout=5m --all --for=condition=Programmed -n envoy-gateway-system
-    printf "%s\n" "$(t 'installation.steps.done')"
+    # Skipping redeploy step; not applicable to Envoy Gateway release
     
     # Container runner installation
     printf "%s\n" ""
