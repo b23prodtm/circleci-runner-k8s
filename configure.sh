@@ -27,7 +27,7 @@ fi
 t() {
 local key=”$1”
 local translation
-translation=$(jq -r “.${LANG}.${key} // "MISSING: ${key}"” “$TRANSLATIONS_FILE” 2>/dev/null)
+translation=$(jq -r “.${LANG}.${key} // \"MISSING: ${key}\"” “$TRANSLATIONS_FILE” 2>/dev/null)
 echo “$translation”
 }
 
