@@ -181,11 +181,35 @@ install_helm() {
     helm version --short
 }
 
+# Ensure minikube runner profile is up and kubeconfig is set
+ensure_cluster() {
+    if ! minikube status -p runner &> /dev/null; then
+        printf "%s\n" "Minikube profile 'runner' not running, starting it..."
+        minikube start -p runner \
+            --driver=docker \
+            --container-runtime=cri-o \
+            --kubernetes-version=v1.32 \
+            --extra-config=kubelet.cgroup-driver=systemd \
+            --extra-config=kubelet.allowed-unsafe-sysctls=kernel.msg*,net.core.somaxconn
+    fi
+    # Set kubeconfig to runner profile
+    minikube update-context -p runner
+    export KUBECONFIG="$HOME/.kube/config"
+    # Wait for API server to be reachable
+    local retries=30
+    until kubectl cluster-info &> /dev/null || (( retries-- == 0 )); do
+        printf "%s\n" "Waiting for API server... ($retries)"
+        sleep 5
+    done
+    kubectl cluster-info
+}
+
 # Main installation script
 main() {
     load_translations
     check_values_file
     install_helm
+    ensure_cluster
     select_language
     display_menu
     ask_gateway_method
@@ -246,11 +270,14 @@ main() {
     fi
 
     echo ""
-    minikube -p runner addons enable headlamp
-    kubectl create token headlamp --duration 24h -n headlamp
     echo "$(t 'installation.main.success')"
-    echo "$(t 'installation.main.dashboard')"
-    minikube -p runner service headlamp -n headlamp --url=true
+    # Headlamp dashboard (interactive only, skip in CI)
+    if [[ -t 1 ]]; then
+        minikube -p runner addons enable headlamp
+        kubectl create token headlamp --duration 24h -n headlamp || true
+        echo "$(t 'installation.main.dashboard')"
+        minikube -p runner service headlamp -n headlamp --url=true || true
+    fi
 }
 
 # Start the script

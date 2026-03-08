@@ -16,29 +16,53 @@ jobs:
   runner-test:
     resource_class: medium #b23prodtm/linux
     docker:
-      #- image: ghcr.io/nestybox/ubuntu-jammy-systemd-docker
-      #  entrypoint: ["/sbin/init"]
-      - image: cimg/base:2024.12
+      - image: ghcr.io/nestybox/ubuntu-jammy-systemd-docker
+        entrypoint: ["/sbin/init"]
     steps:
       - checkout
+
       - run:
           name: Verify environment
-          command: |
-            printenv
+          command: printenv
+
       - run:
           name: Install podman and minikube
           command: |
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
             ./configure_podman.sh
+
+      - run:
+          name: Wait for minikube runner profile
+          command: |
+            echo "Waiting for API server..."
+            minikube update-context -p runner
+            retries=30
+            until kubectl cluster-info &> /dev/null; do
+              retries=$((retries - 1))
+              if (( retries == 0 )); then
+                echo "API server never became ready"
+                kubectl cluster-info || true
+                minikube logs -p runner | tail -30
+                exit 1
+              fi
+              echo "  retries left: $retries"
+              sleep 5
+            done
+            echo "API server ready"
+            kubectl get nodes
+
       - run:
           name: Install helm and charts
           command: |
             set -eu
             cp values.yaml.example values.yaml
-            sed -i -e "s/YOUR_CIRCLECI_TOKEN_HERE/${K8S_RUNNER_TOKEN}/" \
-            -e "s#MY_ORG/RESOURCE_CLASS_HERE#${K8S_RUNNER_RESOURCE}#" values.yaml
+            sed -i \
+              -e "s/YOUR_CIRCLECI_TOKEN_HERE/${K8S_RUNNER_TOKEN}/" \
+              -e "s#MY_ORG/RESOURCE_CLASS_HERE#${K8S_RUNNER_RESOURCE}#" \
+              values.yaml
             ./install_ssh_gateway.sh
+
       - run:
           name: Cleanup cluster
-          command: |
-            minikube delete -p runner || true
+          command: minikube delete -p runner || true
+          when: always
