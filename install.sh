@@ -213,17 +213,16 @@ main() {
 
     if (( GATEWAY_INSTALL & KUBERNETES_INSTALL )); then
         printf "%s\n" "$(t 'installation.steps.kubernetes_install')"
-        kubectl apply --force-conflicts --server-side \
+        kubectl apply --validate=false --force-conflicts --server-side \
             -f https://github.com/envoyproxy/gateway/releases/download/latest/install.yaml
-        dir="$(pwd)"; cd "/home/$USER"
+        HELM_TMPDIR=$(mktemp -d)
         helm pull oci://docker.io/envoyproxy/gateway-helm \
-            --version "$HELM_VERSION" --untar
-        kubectl apply --force-conflicts --server-side \
-            -f ./gateway-helm/crds/gatewayapi-crds.yaml
-        kubectl apply --force-conflicts --server-side \
-            -f ./gateway-helm/crds/generated
-        rm -Rfv ./gateway-helm
-        cd "$dir"
+            --version "$HELM_VERSION" --untar --untardir "$HELM_TMPDIR"
+        kubectl apply --validate=false --force-conflicts --server-side \
+            -f "$HELM_TMPDIR/gateway-helm/crds/gatewayapi-crds.yaml"
+        kubectl apply --validate=false --force-conflicts --server-side \
+            -f "$HELM_TMPDIR/gateway-helm/crds/generated"
+        rm -Rfv "$HELM_TMPDIR"
         printf "%s\n" "$(t 'installation.steps.done')"
 
         sleep 1

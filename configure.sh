@@ -152,7 +152,26 @@ confirm_choices() {
 # Configure CRI-O for rootless userns
 configure_crio_userns() {
     echo "$(t 'install.crio_userns')"
-    minikube ssh -p runner -- sudo bash -c 'cat > /etc/crio/crio.conf.d/99-userns.conf << EOF
+
+    # Setup subuid/subgid for rootless containers (required by newuidmap)
+    minikube ssh -p runner -- sudo bash -c '
+        for U in root $(id -un 1000 2>/dev/null || echo ubuntu); do
+            if ! grep -q "^${U}:" /etc/subuid 2>/dev/null; then
+                echo "${U}:100000:65536" >> /etc/subuid
+            fi
+            if ! grep -q "^${U}:" /etc/subgid 2>/dev/null; then
+                echo "${U}:100000:65536" >> /etc/subgid
+            fi
+        done
+    '
+
+    # Ensure newuidmap/newgidmap have correct setuid bit
+    minikube ssh -p runner -- sudo bash -c '
+        chmod u+s /usr/bin/newuidmap /usr/bin/newgidmap 2>/dev/null || true
+    '
+
+    # CRI-O capabilities config
+    minikube ssh -p runner -- sudo tee /etc/crio/crio.conf.d/99-userns.conf << 'CRIEOF'
 [crio.runtime]
 default_capabilities = [
   "CHOWN",
@@ -165,15 +184,18 @@ default_capabilities = [
   "NET_BIND_SERVICE",
   "KILL"
 ]
-EOF'
+CRIEOF
+
     # Enable unprivileged user namespaces
     minikube ssh -p runner -- \
         sudo sysctl -w kernel.unprivileged_userns_clone=1
     minikube ssh -p runner -- \
         sudo bash -c 'echo "kernel.unprivileged_userns_clone=1" > /etc/sysctl.d/99-userns.conf'
+
     # Restart CRI-O to apply config
     minikube ssh -p runner -- \
         sudo systemctl restart crio
+
     echo "$(t 'install.done')"
 }
 
