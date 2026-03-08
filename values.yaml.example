@@ -39,7 +39,7 @@ agent:
       metadata:
         annotations:
           io.kubernetes.cri-o.userns-mode: "auto:size=65536"
-      # No runtimeClassName needed â uses default CRI-O rootless runtime
+      # No runtimeClassName needed - uses default CRI-O rootless runtime
   ssh:
     enabled: true
 
